@@ -1,0 +1,21 @@
+{
+  "name": "@md-pdf-studio/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "electron .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@md-pdf-studio/core": "workspace:*",
+    "@md-pdf-studio/render": "workspace:*",
+    "@md-pdf-studio/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "electron": "^33.0.0",
+    "typescript": "^5.7.0"
+  }
+}
