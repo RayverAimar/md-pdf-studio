@@ -1,6 +1,6 @@
-export * from "./types";
 export { generateCss } from "./generateCss";
 export { renderMarkdown } from "./markdown";
+export { migrateTheme } from "./migrations";
 export { sanitizeHtml } from "./sanitize";
 export { applyTransforms } from "./transforms";
-export { migrateTheme } from "./migrations";
+export * from "./types";

@@ -14,6 +14,9 @@
   },
   "dependencies": {
     "@md-pdf-studio/core": "workspace:*",
-    "pdfjs-dist": "^4.9.0"
+    "pdfjs-dist": "6.0.227"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
   }
 }

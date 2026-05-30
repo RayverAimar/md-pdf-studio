@@ -5,7 +5,7 @@ function createWindow(): void {
     width: 1440,
     height: 900,
     webPreferences: {
-      preload: `${__dirname}/preload.js`,
+      preload: `${import.meta.dirname}/preload.js`,
     },
   });
   void win.loadURL("http://localhost:3000");

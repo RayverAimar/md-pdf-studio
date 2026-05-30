@@ -1,6 +1,4 @@
-export interface RenderHtmlToPdf {
-  (html: string): Promise<Uint8Array>;
-}
+export type RenderHtmlToPdf = (html: string) => Promise<Uint8Array>;
 
 export async function runTwoPassToc(
   _html: string,

@@ -11,13 +11,7 @@ export type ControlType =
 
 export type EmitterKind = "prop" | "page" | "multiRule" | "boolean" | "cssVar";
 
-export type WidgetKind =
-  | "slider"
-  | "number"
-  | "color"
-  | "select"
-  | "radio"
-  | "toggle";
+export type WidgetKind = "slider" | "number" | "color" | "select" | "radio" | "toggle";
 
 export interface CssTarget {
   selector?: string;
@@ -75,9 +69,7 @@ export type RenderError =
   | { kind: "sanitize_blocked"; message: string }
   | { kind: "unknown"; message: string };
 
-export type RenderResult =
-  | { ok: true; pdf: Uint8Array }
-  | { ok: false; error: RenderError };
+export type RenderResult = { ok: true; pdf: Uint8Array } | { ok: false; error: RenderError };
 
 export interface RenderInput {
   markdown: string;

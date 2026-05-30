@@ -1,5 +1,5 @@
-import { create } from "zustand";
 import type { Theme, ThemeValue } from "@md-pdf-studio/core";
+import { create } from "zustand";
 
 interface ThemeStore {
   theme: Theme | null;

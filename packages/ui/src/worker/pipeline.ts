@@ -6,5 +6,3 @@ export interface PipelineRequest {
 export interface PipelineResponse {
   html: string;
 }
-
-export {};
