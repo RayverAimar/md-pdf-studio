@@ -71,6 +71,20 @@ Run `pnpm lint` and `pnpm typecheck` before every commit. Both must be clean.
 - `RenderPort` hides the per-shell difference (`page.pdf()` vs `webContents.printToPDF()` + pass-1
   introspection); the 2-pass TOC logic itself is shared in `packages/render`.
 
+## Skills & subagents (Claude Code)
+
+Installed skills (project-local in `.claude/skills/`, vendored via the `skills` CLI):
+- **vercel-react-best-practices** — React/Next.js performance rules; auto-triggers on React/UI work.
+- **web-design-guidelines** — UI / accessibility / Web Interface Guidelines review (this is a visual editor).
+
+To add more: `pnpm dlx skills add <owner/repo> --skill <name> --agent claude-code --copy -y`.
+
+Custom subagents (`.claude/agents/`) — use them in review:
+- **design-invariants-reviewer** — enforces the schema-driven / no-free-CSS / sanitization / WYSIWYG rules.
+- **render-pipeline-auditor** — audits the Chromium 2-pass TOC + header/footer + transforms.
+
+(`.claude/skills/**` is excluded from Biome — vendored third-party files.)
+
 ## Git
 
 - Default branch: **main**. PRs target `main`.
