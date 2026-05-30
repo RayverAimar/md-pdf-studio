@@ -1,5 +1,57 @@
 {
   "schemaVersion": 1,
   "name": "Editorial",
-  "values": {}
+  "values": {
+    "page.size": "A4",
+    "page.marginTop": 22,
+    "page.marginRight": 20,
+    "page.marginBottom": 22,
+    "page.marginLeft": 20,
+    "page.background": "#ffffff",
+
+    "body.fontFamily": "Georgia, 'Times New Roman', serif",
+    "body.fontSize": 11,
+    "body.color": "#1a1a1a",
+    "body.lineHeight": 1.7,
+
+    "h1.fontSize": 30,
+    "h1.fontWeight": 700,
+    "h1.color": "#111827",
+    "h1.marginTop": 28,
+    "h1.marginBottom": 14,
+    "h2.fontSize": 22,
+    "h2.color": "#111827",
+    "h3.fontSize": 17,
+    "h3.color": "#111827",
+
+    "link.color": "#1d4ed8",
+    "link.textDecoration": "underline",
+
+    "codeInline.color": "#be123c",
+    "codeInline.background": "#f1f5f9",
+
+    "codeBlock.fontSize": 9.5,
+    "codeBlock.background": "#0f172a",
+    "codeBlock.borderRadius": 8,
+
+    "syntax.foreground": "#e2e8f0",
+    "syntax.comment": "#64748b",
+    "syntax.keyword": "#c792ea",
+    "syntax.string": "#a5d6a7",
+    "syntax.number": "#f78c6c",
+    "syntax.function": "#82aaff",
+
+    "table.headerBg": "#f1f5f9",
+    "table.headerColor": "#0f172a",
+    "table.borderColor": "#cbd5e1",
+    "table.borderMode": "horizontal",
+    "table.stripe": true,
+    "table.stripeColor": "#f8fafc",
+
+    "blockquote.borderLeftWidth": 4,
+    "blockquote.borderLeftColor": "#cbd5e1",
+    "blockquote.color": "#475569",
+    "blockquote.fontStyle": "italic",
+    "blockquote.paddingLeft": 16
+  }
 }

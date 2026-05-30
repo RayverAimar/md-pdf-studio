@@ -1,4 +1,4 @@
-export type Unit = "pt" | "px" | "em" | "rem" | "%";
+export type Unit = "pt" | "px" | "em" | "rem" | "%" | "mm";
 
 export type ControlType =
   | "dimension"
