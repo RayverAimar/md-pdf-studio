@@ -8,6 +8,9 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:web": "pnpm --filter @md-pdf-studio/web dev",
+    "dev:desktop": "pnpm --filter @md-pdf-studio/desktop dev",
+    "dev:app": "concurrently -k -n web,desktop -c blue,magenta \"pnpm dev:web\" \"wait-on http://localhost:3000 && pnpm dev:desktop\"",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
@@ -16,7 +19,14 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",
+    "concurrently": "10.0.0",
     "turbo": "2.9.16",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "wait-on": "9.0.10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron"
+    ]
   }
 }

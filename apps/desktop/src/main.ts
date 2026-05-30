@@ -1,5 +1,7 @@
 import { app, BrowserWindow } from "electron";
 
+const { MDPDF_WEB_URL } = process.env;
+
 function createWindow(): void {
   const win = new BrowserWindow({
     width: 1440,
@@ -8,7 +10,7 @@ function createWindow(): void {
       preload: `${import.meta.dirname}/preload.js`,
     },
   });
-  void win.loadURL("http://localhost:3000");
+  void win.loadURL(MDPDF_WEB_URL ?? "http://localhost:3000");
 }
 
 void app.whenReady().then(() => {

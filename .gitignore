@@ -11,6 +11,10 @@ build/
 out/
 .next/
 .turbo/
+*.tsbuildinfo
+
+# Next.js generated
+next-env.d.ts
 
 # Electron packaged output
 release/
