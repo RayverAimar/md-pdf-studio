@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
-import editorialPreset from "../../../presets/editorial.json";
 import {
   applyTransforms,
   extractHeadingIds,
   generateCss,
   highlightCode,
+  PresetId,
+  presets,
   renderMarkdown,
   sanitizeHtml,
   schema,
-} from "../src/index";
-import type { Theme } from "../src/types";
+} from "@/index";
+import type { Theme } from "@/types";
 
-const editorial = editorialPreset as unknown as Theme;
+const editorial = presets[PresetId.editorial];
 
 function emptyTheme(values: Record<string, string | number | boolean> = {}): Theme {
   return { schemaVersion: 1, name: "test", values };

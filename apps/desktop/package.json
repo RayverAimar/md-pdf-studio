@@ -3,21 +3,24 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "dist/main.js",
+  "main": "dist/main.mjs",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc && electron .",
+    "build": "node esbuild.mjs",
+    "dev": "node esbuild.mjs && electron .",
     "start": "electron .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc",
+    "test:integration": "node esbuild.mjs integration/renderPort.integration.ts && electron dist/renderPort.integration.mjs"
   },
   "dependencies": {
     "@md-pdf-studio/core": "workspace:*",
     "@md-pdf-studio/render": "workspace:*",
-    "@md-pdf-studio/ui": "workspace:*"
+    "@md-pdf-studio/ui": "workspace:*",
+    "pdfjs-dist": "6.0.227"
   },
   "devDependencies": {
     "@types/node": "25.9.1",
     "electron": "42.3.0",
+    "esbuild": "0.28.0",
     "typescript": "6.0.3"
   }
 }

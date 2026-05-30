@@ -45,6 +45,10 @@ export const CssClass = {
   codeInline: "mdp-code-inline",
   codeBlock: "mdp-codeblock",
   tocAnchors: "mdp-toc-anchors",
+  toc: "mdp-toc",
+  tocEntry: "mdp-toc-entry",
+  tocLabel: "mdp-toc-label",
+  tocPageNumber: "mdp-toc-page",
 } as const;
 
 const asSelector = (className: string): string => `.${className}`;
@@ -88,18 +92,20 @@ export const ShikiVar = {
   tokenFunction: "--shiki-token-function",
 } as const;
 
-/** Section a control appears under in the controls panel. */
+// Stable id for the section a control appears under. The visible label is resolved per locale in i18n,
+// never stored here, so a control's grouping is language-independent.
 export const Section = {
-  page: "Page",
-  body: "Body",
-  headings: "Headings",
-  links: "Links",
-  codeInline: "Code · inline",
-  codeBlock: "Code · block",
-  codeColors: "Code · colors",
-  tables: "Tables",
-  blockquote: "Blockquote",
+  page: "page",
+  body: "body",
+  headings: "headings",
+  links: "links",
+  codeInline: "code-inline",
+  codeBlock: "code-block",
+  codeColors: "code-colors",
+  tables: "tables",
+  blockquote: "blockquote",
 } as const;
+export type SectionId = (typeof Section)[keyof typeof Section];
 
 // Central color palette. Schema defaults and presets reference these names rather than raw hex so the
 // whole product shares one set of colors the UI can also consume.
