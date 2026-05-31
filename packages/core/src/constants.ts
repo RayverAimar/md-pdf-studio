@@ -20,8 +20,16 @@ export const ElementKey = {
   table: "table",
   emphasis: "emphasis",
   horizontalRule: "hr",
+  image: "image",
 } as const;
 export type ElementKey = (typeof ElementKey)[keyof typeof ElementKey];
+
+const ELEMENT_KEYS: readonly string[] = Object.values(ElementKey);
+
+/** Narrow a raw `data-mdp-el` attribute to an ElementKey without an unchecked cast. */
+export function isElementKey(value: string): value is ElementKey {
+  return ELEMENT_KEYS.includes(value);
+}
 
 /** Class applied to each rendered element. One class per element keeps specificity even. */
 export const CssClass = {
@@ -44,10 +52,18 @@ export const CssClass = {
   strong: "mdp-strong",
   codeInline: "mdp-code-inline",
   codeBlock: "mdp-codeblock",
+  image: "mdp-img",
+  figure: "mdp-figure",
+  figcaption: "mdp-figcaption",
+  taskItem: "mdp-task",
+  footnotes: "mdp-footnotes",
+  footnoteRef: "mdp-fnref",
   tocAnchors: "mdp-toc-anchors",
   toc: "mdp-toc",
+  tocTitle: "mdp-toc-title",
   tocEntry: "mdp-toc-entry",
   tocLabel: "mdp-toc-label",
+  tocLeader: "mdp-toc-leader",
   tocPageNumber: "mdp-toc-page",
 } as const;
 
@@ -59,15 +75,47 @@ export const Selector = {
   heading1: asSelector(CssClass.heading1),
   heading2: asSelector(CssClass.heading2),
   heading3: asSelector(CssClass.heading3),
+  heading4: asSelector(CssClass.heading4),
+  heading5: asSelector(CssClass.heading5),
+  heading6: asSelector(CssClass.heading6),
+  paragraph: asSelector(CssClass.paragraph),
   link: asSelector(CssClass.link),
+  emphasis: asSelector(CssClass.emphasis),
+  strong: asSelector(CssClass.strong),
   blockquote: asSelector(CssClass.blockquote),
   table: asSelector(CssClass.table),
   codeInline: asSelector(CssClass.codeInline),
   codeBlock: asSelector(CssClass.codeBlock),
+  horizontalRule: asSelector(CssClass.horizontalRule),
+  listUnordered: asSelector(CssClass.listUnordered),
+  listOrdered: asSelector(CssClass.listOrdered),
+  listItem: asSelector(CssClass.listItem),
+  listMarker: `${asSelector(CssClass.listItem)}::marker`,
+  taskCheckbox: `${asSelector(CssClass.listItem)} input[type=checkbox]`,
+  image: asSelector(CssClass.image),
+  figure: asSelector(CssClass.figure),
+  figcaption: asSelector(CssClass.figcaption),
+  footnotes: asSelector(CssClass.footnotes),
+  footnotesSeparator: `${asSelector(CssClass.footnotes)} hr`,
+  toc: asSelector(CssClass.toc),
+  tocTitle: asSelector(CssClass.tocTitle),
+  tocEntry: asSelector(CssClass.tocEntry),
+  tocLeader: asSelector(CssClass.tocLeader),
   tableHeaderCell: `${asSelector(CssClass.table)} th`,
+  tableBodyCell: `${asSelector(CssClass.table)} td`,
   tableAnyCell: `${asSelector(CssClass.table)} td, ${asSelector(CssClass.table)} th`,
   tableRow: `${asSelector(CssClass.table)} tr`,
   tableStripeRow: `${asSelector(CssClass.table)} tbody tr:nth-child(even)`,
+  blockquoteNested: `${asSelector(CssClass.blockquote)} ${asSelector(CssClass.blockquote)}`,
+  listNested: `${asSelector(CssClass.listItem)} ${asSelector(CssClass.listUnordered)}, ${asSelector(CssClass.listItem)} ${asSelector(CssClass.listOrdered)}`,
+  allHeadings: [
+    asSelector(CssClass.heading1),
+    asSelector(CssClass.heading2),
+    asSelector(CssClass.heading3),
+    asSelector(CssClass.heading4),
+    asSelector(CssClass.heading5),
+    asSelector(CssClass.heading6),
+  ].join(","),
   codeBlockText: `${asSelector(CssClass.codeBlock)}, ${asSelector(CssClass.codeBlock)} code`,
 } as const;
 
@@ -75,6 +123,10 @@ export const Selector = {
 export const CssVar = {
   tableBorder: "--mdp-table-border",
   tableStripe: "--mdp-table-stripe",
+  tableBorderWidth: "--mdp-table-border-width",
+  listIndent: "--mdp-list-indent",
+  tocIndent: "--mdp-toc-indent",
+  link: "--mdp-link",
 } as const;
 
 /** Wrap a custom-property name in a `var(...)` reference. */
@@ -90,6 +142,8 @@ export const ShikiVar = {
   tokenString: "--shiki-token-string",
   tokenConstant: "--shiki-token-constant",
   tokenFunction: "--shiki-token-function",
+  tokenVariable: "--shiki-token-variable",
+  tokenPunctuation: "--shiki-token-punctuation",
 } as const;
 
 // Stable id for the section a control appears under. The visible label is resolved per locale in i18n,
@@ -102,8 +156,16 @@ export const Section = {
   codeInline: "code-inline",
   codeBlock: "code-block",
   codeColors: "code-colors",
+  emphasis: "emphasis",
+  lists: "lists",
   tables: "tables",
   blockquote: "blockquote",
+  horizontalRule: "horizontal-rule",
+  images: "images",
+  footnotes: "footnotes",
+  toc: "toc",
+  pagination: "pagination",
+  headerFooter: "header-footer",
 } as const;
 export type SectionId = (typeof Section)[keyof typeof Section];
 

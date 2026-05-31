@@ -5,6 +5,7 @@ import {
   DEFAULT_LOCALE,
   Locale,
   message,
+  optionLabel,
   presetLabel,
   resolveLocale,
   sectionLabel,
@@ -52,5 +53,23 @@ describe("controlLabel", () => {
 
   it("falls back to the English label when a translation is missing", () => {
     expect(controlLabel("made.up", "Fallback", Locale.spanish)).toBe("Fallback");
+  });
+});
+
+describe("optionLabel", () => {
+  it("translates a semantic enum option per locale", () => {
+    expect(optionLabel("table.borderMode", "horizontal", Locale.english)).toBe("Horizontal");
+    expect(optionLabel("table.borderMode", "horizontal", Locale.spanish)).toBe("Horizontales");
+  });
+
+  it("returns the raw value for language-neutral tokens in either locale", () => {
+    expect(optionLabel("page.size", "A4", Locale.spanish)).toBe("A4");
+    expect(optionLabel("hr.style", "dashed", Locale.spanish)).toBe("dashed");
+    expect(optionLabel("list.numberStyle", "decimal", Locale.spanish)).toBe("decimal");
+  });
+
+  it("falls back to the raw value for an unknown control or option", () => {
+    expect(optionLabel("made.up", "whatever", Locale.spanish)).toBe("whatever");
+    expect(optionLabel("table.borderMode", "unknown", Locale.spanish)).toBe("unknown");
   });
 });

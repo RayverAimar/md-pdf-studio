@@ -40,6 +40,8 @@ export const ALLOWED_TAGS: string[] = [
   "summary",
   "nav",
   "div",
+  "section",
+  "input",
 ];
 
 export const ALLOWED_ATTR: string[] = [
@@ -57,14 +59,24 @@ export const ALLOWED_ATTR: string[] = [
   "open",
   "target",
   "rel",
+  "type",
+  "checked",
+  "disabled",
 ];
+
+// One URL-scheme policy both shells share. `data:` is allowed only on <img src> so base64-embedded
+// images survive; this matches DOMPurify's client default (data: permitted on media tags only, where an
+// <img>-loaded SVG cannot run script), keeping preview and PDF in agreement.
+export const ALLOWED_SCHEMES: string[] = ["http", "https", "mailto", "tel"];
+export const IMG_ALLOWED_SCHEMES: string[] = [...ALLOWED_SCHEMES, "data"];
 
 const config: sanitizeHtmlLib.IOptions = {
   allowedTags: ALLOWED_TAGS,
   // `style` is kept verbatim (no allowedStyles) so Shiki's `var(--shiki-*)` token colors survive.
   // Inline style cannot execute script in modern engines; the XSS surface is tags/handlers/URLs.
   allowedAttributes: { "*": ALLOWED_ATTR },
-  allowedSchemes: ["http", "https", "mailto", "tel"],
+  allowedSchemes: ALLOWED_SCHEMES,
+  allowedSchemesByTag: { img: IMG_ALLOWED_SCHEMES },
   allowProtocolRelative: false,
   disallowedTagsMode: "discard",
 };

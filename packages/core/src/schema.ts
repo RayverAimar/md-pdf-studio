@@ -1,26 +1,51 @@
 import { CssVar, cssVarRef, FontStack, Palette, Section, Selector, ShikiVar } from "./constants";
 import type { ControlDef, Schema } from "./types";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 const tableBorderRef = cssVarRef(CssVar.tableBorder);
 const tableStripeRef = cssVarRef(CssVar.tableStripe);
+const tableBorderWidthRef = cssVarRef(CssVar.tableBorderWidth);
+
+// Per-heading bottom-rule color: the boolean toggle rule is pre-baked text and cannot interpolate a
+// live color, so each heading owns its own custom property the toggle references and the color sets.
+const headingRuleVar = (n: number): string => `--mdp-h${n}-rule`;
+
+// The control-key suffixes every heading level shares. The single source the schema and the i18n
+// label catalog both iterate, so the per-heading key sets cannot drift apart.
+export const HEADING_CONTROL_SUFFIXES = [
+  "fontSize",
+  "fontWeight",
+  "color",
+  "marginTop",
+  "marginBottom",
+  "lineHeight",
+  "borderBottom",
+  "borderBottomColor",
+  "breakBefore",
+] as const;
+
+export type HeadingControlSuffix = (typeof HEADING_CONTROL_SUFFIXES)[number];
 
 interface HeadingDefaults {
   fontSize: number;
   color: string;
   marginTop: number;
   marginBottom: number;
+  lineHeight: number;
 }
 
 function headingControls(
   selector: string,
   label: string,
+  n: number,
   defaults: HeadingDefaults,
 ): Record<string, ControlDef> {
   const prefix = label.toLowerCase();
-  return {
-    [`${prefix}.fontSize`]: {
+  const ruleVar = headingRuleVar(n);
+  // Keyed by suffix so the spread below stays in lockstep with HEADING_CONTROL_SUFFIXES.
+  const bySuffix: Record<HeadingControlSuffix, ControlDef> = {
+    fontSize: {
       type: "dimension",
       emitter: "prop",
       control: "slider",
@@ -34,7 +59,7 @@ function headingControls(
       section: Section.headings,
       label: `${label} size`,
     },
-    [`${prefix}.fontWeight`]: {
+    fontWeight: {
       type: "fontWeight",
       emitter: "prop",
       control: "slider",
@@ -46,7 +71,7 @@ function headingControls(
       section: Section.headings,
       label: `${label} weight`,
     },
-    [`${prefix}.color`]: {
+    color: {
       type: "color",
       emitter: "prop",
       control: "color",
@@ -56,7 +81,7 @@ function headingControls(
       section: Section.headings,
       label: `${label} color`,
     },
-    [`${prefix}.marginTop`]: {
+    marginTop: {
       type: "dimension",
       emitter: "prop",
       control: "slider",
@@ -69,7 +94,7 @@ function headingControls(
       section: Section.headings,
       label: `${label} space above`,
     },
-    [`${prefix}.marginBottom`]: {
+    marginBottom: {
       type: "dimension",
       emitter: "prop",
       control: "slider",
@@ -82,7 +107,53 @@ function headingControls(
       section: Section.headings,
       label: `${label} space below`,
     },
+    lineHeight: {
+      type: "number",
+      emitter: "prop",
+      control: "slider",
+      default: defaults.lineHeight,
+      min: 1,
+      max: 2,
+      step: 0.05,
+      css: { selector, prop: "line-height" },
+      section: Section.headings,
+      label: `${label} line height`,
+    },
+    borderBottom: {
+      type: "boolean",
+      emitter: "boolean",
+      control: "toggle",
+      default: false,
+      css: {
+        whenTrue: `${selector} { border-bottom: 1px solid ${cssVarRef(ruleVar)}; padding-bottom: 0.2em; }`,
+      },
+      section: Section.headings,
+      label: `${label} bottom rule`,
+    },
+    borderBottomColor: {
+      type: "color",
+      emitter: "cssVar",
+      control: "color",
+      default: Palette.border,
+      format: "hex",
+      css: { var: ruleVar },
+      section: Section.headings,
+      label: `${label} rule color`,
+    },
+    breakBefore: {
+      type: "boolean",
+      emitter: "boolean",
+      control: "toggle",
+      default: false,
+      css: { whenTrue: `${selector} { break-before: page; }` },
+      section: Section.headings,
+      label: `${label} page break before`,
+    },
   };
+
+  const out: Record<string, ControlDef> = {};
+  for (const suffix of HEADING_CONTROL_SUFFIXES) out[`${prefix}.${suffix}`] = bySuffix[suffix];
+  return out;
 }
 
 const controls: Record<string, ControlDef> = {
@@ -207,25 +278,72 @@ const controls: Record<string, ControlDef> = {
     section: Section.body,
     label: "Line height",
   },
+  "body.textAlign": {
+    type: "enum",
+    emitter: "prop",
+    control: "select",
+    default: "left",
+    enum: ["left", "justify"],
+    css: { selector: Selector.root, prop: "text-align" },
+    section: Section.body,
+    label: "Text align",
+  },
+  "body.paragraphSpacing": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 10,
+    min: 0,
+    max: 32,
+    step: 1,
+    unit: "pt",
+    css: { selector: Selector.paragraph, prop: "margin-block" },
+    section: Section.body,
+    label: "Paragraph spacing",
+  },
 
   // Headings
-  ...headingControls(Selector.heading1, "H1", {
+  ...headingControls(Selector.heading1, "H1", 1, {
     fontSize: 28,
     color: Palette.inkStrong,
     marginTop: 24,
     marginBottom: 12,
+    lineHeight: 1.2,
   }),
-  ...headingControls(Selector.heading2, "H2", {
+  ...headingControls(Selector.heading2, "H2", 2, {
     fontSize: 22,
     color: Palette.inkStrong,
     marginTop: 20,
     marginBottom: 10,
+    lineHeight: 1.25,
   }),
-  ...headingControls(Selector.heading3, "H3", {
+  ...headingControls(Selector.heading3, "H3", 3, {
     fontSize: 17,
     color: Palette.inkStrong,
     marginTop: 16,
     marginBottom: 8,
+    lineHeight: 1.3,
+  }),
+  ...headingControls(Selector.heading4, "H4", 4, {
+    fontSize: 15,
+    color: Palette.inkHeading,
+    marginTop: 14,
+    marginBottom: 6,
+    lineHeight: 1.3,
+  }),
+  ...headingControls(Selector.heading5, "H5", 5, {
+    fontSize: 13,
+    color: Palette.inkHeading,
+    marginTop: 12,
+    marginBottom: 5,
+    lineHeight: 1.3,
+  }),
+  ...headingControls(Selector.heading6, "H6", 6, {
+    fontSize: 12,
+    color: Palette.textMuted,
+    marginTop: 10,
+    marginBottom: 4,
+    lineHeight: 1.3,
   }),
 
   // Links
@@ -260,6 +378,50 @@ const controls: Record<string, ControlDef> = {
     css: { selector: Selector.link, prop: "font-weight" },
     section: Section.links,
     label: "Weight",
+  },
+
+  // Emphasis
+  "strong.fontWeight": {
+    type: "fontWeight",
+    emitter: "prop",
+    control: "slider",
+    default: 700,
+    min: 100,
+    max: 900,
+    step: 100,
+    css: { selector: Selector.strong, prop: "font-weight" },
+    section: Section.emphasis,
+    label: "Bold weight",
+  },
+  "strong.color": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.inkStrong,
+    format: "hex",
+    css: { selector: Selector.strong, prop: "color" },
+    section: Section.emphasis,
+    label: "Bold color",
+  },
+  "em.fontStyle": {
+    type: "enum",
+    emitter: "prop",
+    control: "select",
+    default: "italic",
+    enum: ["italic", "normal"],
+    css: { selector: Selector.emphasis, prop: "font-style" },
+    section: Section.emphasis,
+    label: "Italic style",
+  },
+  "em.color": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.ink,
+    format: "hex",
+    css: { selector: Selector.emphasis, prop: "color" },
+    section: Section.emphasis,
+    label: "Italic color",
   },
 
   // Inline code
@@ -304,6 +466,42 @@ const controls: Record<string, ControlDef> = {
     css: { selector: Selector.codeInline, prop: "background-color" },
     section: Section.codeInline,
     label: "Background",
+  },
+  "codeInline.padding": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 0.2,
+    min: 0,
+    max: 0.6,
+    step: 0.05,
+    unit: "em",
+    css: { selector: Selector.codeInline, prop: "padding-inline" },
+    section: Section.codeInline,
+    label: "Padding",
+  },
+  "codeInline.borderRadius": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 4,
+    min: 0,
+    max: 12,
+    step: 1,
+    unit: "px",
+    css: { selector: Selector.codeInline, prop: "border-radius" },
+    section: Section.codeInline,
+    label: "Corner radius",
+  },
+  "codeInline.border": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.border,
+    format: "hex",
+    css: { selector: Selector.codeInline, prop: "border-color" },
+    section: Section.codeInline,
+    label: "Border color",
   },
 
   // Code block
@@ -370,16 +568,38 @@ const controls: Record<string, ControlDef> = {
     section: Section.codeBlock,
     label: "Line height",
   },
+  // Wrapping is the safe print default (long lines clip off the page edge otherwise), so the control
+  // defaults on and the off branch restores horizontal scrolling instead of the other way around.
   "codeBlock.wrap": {
     type: "boolean",
     emitter: "boolean",
     control: "toggle",
-    default: false,
+    default: true,
     css: {
       whenTrue: `${Selector.codeBlockText} { white-space: pre-wrap; word-break: break-word; }`,
+      whenFalse: `${Selector.codeBlockText} { white-space: pre; overflow-x: auto; }`,
     },
     section: Section.codeBlock,
     label: "Wrap long lines",
+  },
+  "codeBlock.fontFamily": {
+    type: "fontFamily",
+    emitter: "prop",
+    control: "select",
+    default: FontStack.mono,
+    css: { selector: Selector.codeBlockText, prop: "font-family" },
+    section: Section.codeBlock,
+    label: "Font family",
+  },
+  "codeBlock.borderColor": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.codeSurface,
+    format: "hex",
+    css: { selector: Selector.codeBlock, prop: "border-color" },
+    section: Section.codeBlock,
+    label: "Border color",
   },
 
   // Syntax colors (Shiki css-variables theme)
@@ -443,6 +663,26 @@ const controls: Record<string, ControlDef> = {
     section: Section.codeColors,
     label: "Function",
   },
+  "syntax.variable": {
+    type: "color",
+    emitter: "cssVar",
+    control: "color",
+    default: Palette.syntaxForeground,
+    format: "hex",
+    css: { var: ShikiVar.tokenVariable },
+    section: Section.codeColors,
+    label: "Variable",
+  },
+  "syntax.punctuation": {
+    type: "color",
+    emitter: "cssVar",
+    control: "color",
+    default: Palette.textFaint,
+    format: "hex",
+    css: { var: ShikiVar.tokenPunctuation },
+    section: Section.codeColors,
+    label: "Punctuation",
+  },
 
   // Tables
   "table.headerBg": {
@@ -482,9 +722,17 @@ const controls: Record<string, ControlDef> = {
     default: "horizontal",
     enum: ["all", "horizontal", "none"],
     rules: {
-      all: [{ selector: Selector.tableAnyCell, decl: `border: 1px solid ${tableBorderRef}` }],
+      all: [
+        {
+          selector: Selector.tableAnyCell,
+          decl: `border: ${tableBorderWidthRef} solid ${tableBorderRef}`,
+        },
+      ],
       horizontal: [
-        { selector: Selector.tableRow, decl: `border-bottom: 1px solid ${tableBorderRef}` },
+        {
+          selector: Selector.tableRow,
+          decl: `border-bottom: ${tableBorderWidthRef} solid ${tableBorderRef}`,
+        },
       ],
       none: [],
     },
@@ -535,6 +783,64 @@ const controls: Record<string, ControlDef> = {
     css: { var: CssVar.tableStripe },
     section: Section.tables,
     label: "Stripe color",
+  },
+  "table.headerWeight": {
+    type: "fontWeight",
+    emitter: "prop",
+    control: "slider",
+    default: 700,
+    min: 100,
+    max: 900,
+    step: 100,
+    css: { selector: Selector.tableHeaderCell, prop: "font-weight" },
+    section: Section.tables,
+    label: "Header weight",
+  },
+  "table.borderWidth": {
+    type: "dimension",
+    emitter: "cssVar",
+    control: "slider",
+    default: 1,
+    min: 0,
+    max: 4,
+    step: 1,
+    unit: "px",
+    css: { var: CssVar.tableBorderWidth },
+    section: Section.tables,
+    label: "Border width",
+  },
+  "table.fontSize": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 10,
+    min: 7,
+    max: 16,
+    step: 0.5,
+    unit: "pt",
+    css: { selector: Selector.tableAnyCell, prop: "font-size" },
+    section: Section.tables,
+    label: "Font size",
+  },
+  "table.headerAlign": {
+    type: "enum",
+    emitter: "prop",
+    control: "select",
+    default: "left",
+    enum: ["left", "center", "right"],
+    css: { selector: Selector.tableHeaderCell, prop: "text-align" },
+    section: Section.tables,
+    label: "Header align",
+  },
+  "table.cellAlign": {
+    type: "enum",
+    emitter: "prop",
+    control: "select",
+    default: "left",
+    enum: ["left", "center", "right"],
+    css: { selector: Selector.tableBodyCell, prop: "text-align" },
+    section: Section.tables,
+    label: "Cell align",
   },
 
   // Blockquote
@@ -593,6 +899,486 @@ const controls: Record<string, ControlDef> = {
     css: { selector: Selector.blockquote, prop: "padding-left" },
     section: Section.blockquote,
     label: "Indent",
+  },
+  "blockquote.background": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.surfaceFaint,
+    format: "hex",
+    css: { selector: Selector.blockquote, prop: "background-color" },
+    section: Section.blockquote,
+    label: "Background",
+  },
+  "blockquote.marginY": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 12,
+    min: 0,
+    max: 40,
+    step: 1,
+    unit: "px",
+    css: { selector: Selector.blockquote, prop: "margin-block" },
+    section: Section.blockquote,
+    label: "Vertical spacing",
+  },
+  "blockquote.nestedIndent": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 16,
+    min: 0,
+    max: 48,
+    step: 1,
+    unit: "px",
+    css: { selector: Selector.blockquoteNested, prop: "padding-left" },
+    section: Section.blockquote,
+    label: "Nested indent",
+  },
+
+  // Lists
+  "list.bulletStyle": {
+    type: "enum",
+    emitter: "prop",
+    control: "select",
+    default: "disc",
+    enum: ["disc", "circle", "square", "none"],
+    css: { selector: Selector.listUnordered, prop: "list-style-type" },
+    section: Section.lists,
+    label: "Bullet style",
+  },
+  "list.numberStyle": {
+    type: "enum",
+    emitter: "prop",
+    control: "select",
+    default: "decimal",
+    enum: ["decimal", "lower-alpha", "upper-alpha", "lower-roman"],
+    css: { selector: Selector.listOrdered, prop: "list-style-type" },
+    section: Section.lists,
+    label: "Number style",
+  },
+  "list.indent": {
+    type: "dimension",
+    emitter: "cssVar",
+    control: "slider",
+    default: 1.5,
+    min: 0,
+    max: 4,
+    step: 0.1,
+    unit: "em",
+    css: { var: CssVar.listIndent },
+    section: Section.lists,
+    label: "Indent",
+  },
+  "list.itemSpacing": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 4,
+    min: 0,
+    max: 20,
+    step: 1,
+    unit: "px",
+    css: { selector: Selector.listItem, prop: "margin-block" },
+    section: Section.lists,
+    label: "Item spacing",
+  },
+  "list.nestedIndent": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 1.2,
+    min: 0,
+    max: 4,
+    step: 0.1,
+    unit: "em",
+    css: { selector: Selector.listNested, prop: "padding-inline-start" },
+    section: Section.lists,
+    label: "Nested indent",
+  },
+  "list.markerColor": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.textMuted,
+    format: "hex",
+    css: { selector: Selector.listMarker, prop: "color" },
+    section: Section.lists,
+    label: "Marker color",
+  },
+  "taskList.checkboxStyle": {
+    type: "enum",
+    emitter: "multiRule",
+    control: "select",
+    default: "accent",
+    enum: ["accent", "square", "hidden"],
+    rules: {
+      accent: [{ selector: Selector.taskCheckbox, decl: "accent-color: auto" }],
+      square: [
+        {
+          selector: Selector.taskCheckbox,
+          decl: "appearance: none; width: 0.9em; height: 0.9em; border: 1px solid currentColor",
+        },
+      ],
+      hidden: [{ selector: Selector.taskCheckbox, decl: "display: none" }],
+    },
+    section: Section.lists,
+    label: "Checkbox style",
+  },
+
+  // Horizontal rule
+  "hr.thickness": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 1,
+    min: 1,
+    max: 8,
+    step: 1,
+    unit: "px",
+    css: { selector: Selector.horizontalRule, prop: "border-top-width" },
+    section: Section.horizontalRule,
+    label: "Thickness",
+  },
+  "hr.color": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.border,
+    format: "hex",
+    css: { selector: Selector.horizontalRule, prop: "border-top-color" },
+    section: Section.horizontalRule,
+    label: "Color",
+  },
+  "hr.style": {
+    type: "enum",
+    emitter: "prop",
+    control: "select",
+    default: "solid",
+    enum: ["solid", "dashed", "dotted"],
+    css: { selector: Selector.horizontalRule, prop: "border-top-style" },
+    section: Section.horizontalRule,
+    label: "Style",
+  },
+  "hr.marginY": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 16,
+    min: 0,
+    max: 48,
+    step: 1,
+    unit: "px",
+    css: { selector: Selector.horizontalRule, prop: "margin-block" },
+    section: Section.horizontalRule,
+    label: "Vertical spacing",
+  },
+
+  // Images
+  "image.maxWidth": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 100,
+    min: 20,
+    max: 100,
+    step: 1,
+    unit: "%",
+    css: { selector: Selector.image, prop: "max-width" },
+    section: Section.images,
+    label: "Max width",
+  },
+  "image.align": {
+    type: "enum",
+    emitter: "multiRule",
+    control: "select",
+    default: "center",
+    enum: ["left", "center", "right"],
+    rules: {
+      left: [{ selector: Selector.figure, decl: "margin-inline: 0 auto" }],
+      center: [{ selector: Selector.figure, decl: "margin-inline: auto" }],
+      right: [{ selector: Selector.figure, decl: "margin-inline: auto 0" }],
+    },
+    section: Section.images,
+    label: "Alignment",
+  },
+  "image.border": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.border,
+    format: "hex",
+    css: { selector: Selector.image, prop: "border-color" },
+    section: Section.images,
+    label: "Border color",
+  },
+  "image.borderRadius": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 0,
+    min: 0,
+    max: 24,
+    step: 1,
+    unit: "px",
+    css: { selector: Selector.image, prop: "border-radius" },
+    section: Section.images,
+    label: "Corner radius",
+  },
+  "image.shadow": {
+    type: "boolean",
+    emitter: "boolean",
+    control: "toggle",
+    default: false,
+    css: { whenTrue: `${Selector.image} { box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18); }` },
+    section: Section.images,
+    label: "Drop shadow",
+  },
+  "caption.fontSize": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 9,
+    min: 6,
+    max: 14,
+    step: 0.5,
+    unit: "pt",
+    css: { selector: Selector.figcaption, prop: "font-size" },
+    section: Section.images,
+    label: "Caption size",
+  },
+  "caption.color": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.textMuted,
+    format: "hex",
+    css: { selector: Selector.figcaption, prop: "color" },
+    section: Section.images,
+    label: "Caption color",
+  },
+  "caption.fontStyle": {
+    type: "enum",
+    emitter: "prop",
+    control: "select",
+    default: "italic",
+    enum: ["italic", "normal"],
+    css: { selector: Selector.figcaption, prop: "font-style" },
+    section: Section.images,
+    label: "Caption style",
+  },
+
+  // Footnotes
+  "footnote.separator": {
+    type: "enum",
+    emitter: "multiRule",
+    control: "select",
+    default: "line",
+    enum: ["line", "space", "none"],
+    rules: {
+      line: [
+        {
+          selector: Selector.footnotesSeparator,
+          decl: `border: 0; border-top: 1px solid ${cssVarRef(CssVar.tableBorder)}`,
+        },
+      ],
+      space: [{ selector: Selector.footnotesSeparator, decl: "border: 0; margin-block: 1em" }],
+      none: [{ selector: Selector.footnotesSeparator, decl: "display: none" }],
+    },
+    section: Section.footnotes,
+    label: "Separator",
+  },
+  "footnote.fontSize": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 9,
+    min: 6,
+    max: 13,
+    step: 0.5,
+    unit: "pt",
+    css: { selector: Selector.footnotes, prop: "font-size" },
+    section: Section.footnotes,
+    label: "Font size",
+  },
+  "footnote.color": {
+    type: "color",
+    emitter: "prop",
+    control: "color",
+    default: Palette.textMuted,
+    format: "hex",
+    css: { selector: Selector.footnotes, prop: "color" },
+    section: Section.footnotes,
+    label: "Text color",
+  },
+
+  // Table of contents
+  "toc.enabled": {
+    type: "boolean",
+    emitter: "meta",
+    control: "toggle",
+    default: true,
+    section: Section.toc,
+    label: "Show table of contents",
+  },
+  "toc.depth": {
+    type: "number",
+    emitter: "meta",
+    control: "slider",
+    default: 3,
+    min: 1,
+    max: 6,
+    step: 1,
+    section: Section.toc,
+    label: "Depth",
+  },
+  "toc.title": {
+    type: "enum",
+    emitter: "meta",
+    control: "select",
+    default: "contents",
+    enum: ["contents", "index", "none"],
+    section: Section.toc,
+    label: "Title",
+  },
+  "toc.leaderDots": {
+    type: "boolean",
+    emitter: "boolean",
+    control: "toggle",
+    default: true,
+    css: {
+      whenTrue: `${Selector.tocLeader} { flex: 1; border-bottom: 1px dotted currentColor; margin: 0 0.4em; transform: translateY(-0.25em); }`,
+    },
+    section: Section.toc,
+    label: "Leader dots",
+  },
+  "toc.fontSize": {
+    type: "dimension",
+    emitter: "prop",
+    control: "slider",
+    default: 11,
+    min: 8,
+    max: 16,
+    step: 0.5,
+    unit: "pt",
+    css: { selector: Selector.toc, prop: "font-size" },
+    section: Section.toc,
+    label: "Font size",
+  },
+  "toc.indentPerLevel": {
+    type: "dimension",
+    emitter: "cssVar",
+    control: "slider",
+    default: 16,
+    min: 0,
+    max: 40,
+    step: 1,
+    unit: "px",
+    css: { var: CssVar.tocIndent },
+    section: Section.toc,
+    label: "Indent per level",
+  },
+
+  // Pagination (print)
+  "pagination.widows": {
+    type: "number",
+    emitter: "prop",
+    control: "slider",
+    default: 2,
+    min: 1,
+    max: 5,
+    step: 1,
+    css: { selector: Selector.paragraph, prop: "widows" },
+    section: Section.pagination,
+    label: "Widows",
+  },
+  "pagination.orphans": {
+    type: "number",
+    emitter: "prop",
+    control: "slider",
+    default: 2,
+    min: 1,
+    max: 5,
+    step: 1,
+    css: { selector: Selector.paragraph, prop: "orphans" },
+    section: Section.pagination,
+    label: "Orphans",
+  },
+  "pagination.keepHeadings": {
+    type: "boolean",
+    emitter: "boolean",
+    control: "toggle",
+    default: true,
+    css: { whenTrue: `${Selector.allHeadings} { break-after: avoid; }` },
+    section: Section.pagination,
+    label: "Keep headings with text",
+  },
+  "pagination.breakBeforeH1": {
+    type: "boolean",
+    emitter: "boolean",
+    control: "toggle",
+    default: false,
+    css: { whenTrue: `${Selector.heading1} { break-before: page; }` },
+    section: Section.pagination,
+    label: "Page break before H1",
+  },
+
+  // Header & footer (consumed by the render layer, not the stylesheet)
+  "header.show": {
+    type: "boolean",
+    emitter: "meta",
+    control: "toggle",
+    default: false,
+    section: Section.headerFooter,
+    label: "Show header",
+  },
+  "header.content": {
+    type: "enum",
+    emitter: "meta",
+    control: "select",
+    default: "title",
+    enum: ["none", "title", "date", "title-date"],
+    section: Section.headerFooter,
+    label: "Header content",
+  },
+  "footer.show": {
+    type: "boolean",
+    emitter: "meta",
+    control: "toggle",
+    default: true,
+    section: Section.headerFooter,
+    label: "Show footer",
+  },
+  "footer.content": {
+    type: "enum",
+    emitter: "meta",
+    control: "select",
+    default: "page",
+    enum: ["none", "page", "page-total", "title-page"],
+    section: Section.headerFooter,
+    label: "Footer content",
+  },
+  "headerFooter.fontSize": {
+    type: "dimension",
+    emitter: "meta",
+    control: "slider",
+    default: 9,
+    min: 6,
+    max: 14,
+    step: 0.5,
+    unit: "pt",
+    section: Section.headerFooter,
+    label: "Font size",
+  },
+  "headerFooter.color": {
+    type: "color",
+    emitter: "meta",
+    control: "color",
+    default: Palette.textFaint,
+    format: "hex",
+    section: Section.headerFooter,
+    label: "Text color",
   },
 };
 

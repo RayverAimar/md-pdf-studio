@@ -1,3 +1,5 @@
+import { BASE_CSS } from "./base";
+import { FontStack } from "./constants";
 import {
   cssVarDeclaration,
   emitBoolean,
@@ -5,9 +7,21 @@ import {
   emitProp,
   pageDeclaration,
 } from "./emitters";
+import { FONT_FACE_CSS } from "./fonts";
+import { schema } from "./schema";
 import type { ControlDef, Schema, Theme, ThemeValue } from "./types";
 
-const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+/** Shared hex literal shape: `#rgb` or `#rrggbb`. The single definition the validated color uses. */
+export const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+/** Whether a value is a hex color literal accepted by the color emitter. */
+export function isHexColor(value: string): boolean {
+  return HEX_RE.test(value);
+}
+
+// fontFamily interpolates verbatim into a rule, so the value is bounded to the bundled stacks the UI
+// offers; anything else (a crafted theme value) cannot reach the stylesheet.
+const ALLOWED_FONTS = new Set<string>(Object.values(FontStack));
 
 function clamp(value: number, min: number | undefined, max: number | undefined): number {
   let v = value;
@@ -24,7 +38,7 @@ function resolveValue(control: ControlDef, raw: ThemeValue | undefined): ThemeVa
     case "fontWeight":
       return typeof raw === "number" ? clamp(raw, control.min, control.max) : control.default;
     case "color":
-      return typeof raw === "string" && HEX_RE.test(raw) ? raw : control.default;
+      return typeof raw === "string" && isHexColor(raw) ? raw : control.default;
     case "enum":
       return (typeof raw === "string" || typeof raw === "number") &&
         control.enum?.includes(raw) === true
@@ -33,7 +47,7 @@ function resolveValue(control: ControlDef, raw: ThemeValue | undefined): ThemeVa
     case "boolean":
       return typeof raw === "boolean" ? raw : control.default;
     case "fontFamily":
-      return typeof raw === "string" ? raw : control.default;
+      return typeof raw === "string" && ALLOWED_FONTS.has(raw) ? raw : control.default;
     default:
       return control.default;
   }
@@ -86,6 +100,9 @@ export function generateCss(schema: Schema, theme: Theme): string {
         if (rule !== "") booleanRules.push(rule);
         break;
       }
+      // `meta` controls feed the render layer (header/footer, TOC engine), not the stylesheet.
+      case "meta":
+        break;
     }
   }
 
@@ -94,4 +111,13 @@ export function generateCss(schema: Schema, theme: Theme): string {
   if (varDecls.length > 0) layers.push(block(":root", varDecls));
   layers.push(...propRules, ...multiRules, ...booleanRules);
   return layers.join("\n");
+}
+
+/**
+ * The full WYSIWYG stylesheet both the preview and the PDF use: bundled @font-face declarations, the
+ * structural base layer, then the theme-driven rules. One definition of the layer order so the preview
+ * and print paths cannot drift.
+ */
+export function composeDocumentCss(theme: Theme): string {
+  return `${FONT_FACE_CSS}\n${BASE_CSS}\n${generateCss(schema, theme)}`;
 }

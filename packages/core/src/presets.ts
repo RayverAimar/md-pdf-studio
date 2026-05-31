@@ -11,6 +11,13 @@ export const PresetId = {
 } as const;
 export type PresetId = (typeof PresetId)[keyof typeof PresetId];
 
+const PRESET_IDS: readonly string[] = Object.values(PresetId);
+
+/** Narrow a raw select value to a PresetId without an unchecked cast. */
+export function isPresetId(value: string): value is PresetId {
+  return PRESET_IDS.includes(value);
+}
+
 export const presets: Record<PresetId, Theme> = {
   [PresetId.editorial]: editorial as unknown as Theme,
   [PresetId.technical]: technical as unknown as Theme,
