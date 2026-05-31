@@ -7,7 +7,8 @@ import { prepareContent, readHeadingPages } from "@md-pdf-studio/render";
 import { app } from "electron";
 import { ElectronRenderPort } from "../src/renderPort";
 
-const RESULT_FILE = process.env["MDP_RESULT_FILE"] ?? join(tmpdir(), "mdp-integration-result.json");
+const { MDP_RESULT_FILE } = process.env;
+const RESULT_FILE = MDP_RESULT_FILE ?? join(tmpdir(), "mdp-integration-result.json");
 
 // Headless/offscreen GPU is unreliable in a non-interactive run; software rendering is stable.
 app.disableHardwareAcceleration();

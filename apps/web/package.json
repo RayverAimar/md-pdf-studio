@@ -14,6 +14,7 @@
     "@md-pdf-studio/render": "workspace:*",
     "@md-pdf-studio/ui": "workspace:*",
     "next": "16.2.6",
+    "pdfjs-dist": "6.0.227",
     "puppeteer": "25.1.0",
     "react": "19.2.6",
     "react-dom": "19.2.6"
