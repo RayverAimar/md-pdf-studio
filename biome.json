@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!.claude/skills"]
+    "includes": ["**", "!.claude/skills", "!packages/core/src/fonts.ts"]
   },
   "formatter": {
     "enabled": true,
