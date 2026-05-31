@@ -58,6 +58,30 @@ describe("buildTocHtml", () => {
   it("returns empty string when there are no visible headings", () => {
     expect(buildTocHtml([], {})).toBe("");
   });
+
+  it("emits nothing when disabled even with visible headings", () => {
+    expect(buildTocHtml(headings, { a: 1 }, { enabled: false })).toBe("");
+  });
+
+  it("honors a custom depth cap", () => {
+    const html = buildTocHtml(headings, {}, { maxLevel: 4 });
+    expect(html).toContain("Deep"); // level 4 now within the cap
+  });
+
+  it("renders the localized title when provided", () => {
+    const html = buildTocHtml(headings, {}, { title: "Contents" });
+    expect(html).toContain('class="mdp-toc-title">Contents</h2>');
+  });
+
+  it("omits the title heading when the title is empty", () => {
+    const html = buildTocHtml(headings, {}, { title: "" });
+    expect(html).not.toContain("mdp-toc-title");
+  });
+
+  it("inserts a leader span between label and page for each entry", () => {
+    const html = buildTocHtml([{ id: "a", level: 1, text: "Alpha" }], { a: 2 });
+    expect(html).toContain('class="mdp-toc-leader"></span>');
+  });
 });
 
 describe("buildDocument", () => {
@@ -67,5 +91,13 @@ describe("buildDocument", () => {
     expect(doc).toContain("<style>");
     expect(doc).toContain("@page {");
     expect(doc).toContain('<div class="mdp"><p>hi</p></div>');
+  });
+
+  it("embeds the bundled @font-face faces so the PDF is self-contained", () => {
+    const doc = buildDocument(defaultPreset, "<p>hi</p>");
+    expect(doc).toContain("@font-face");
+    expect(doc).toContain("font-family:'Inter'");
+    expect(doc).toContain("font-family:'JetBrains Mono'");
+    expect(doc).toContain("data:font/woff2;base64,");
   });
 });

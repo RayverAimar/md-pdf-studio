@@ -1,11 +1,31 @@
+import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { HeadingPages } from "./document";
 
-// pdf.js loads its parser as a worker via a runtime dynamic import a bundler can't follow. Pointing
-// workerSrc at the file in node_modules keeps it resolvable from a bundled build too.
-const resolveFrom = createRequire(import.meta.url);
-GlobalWorkerOptions.workerSrc = resolveFrom.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
+const WORKER_MODULE = "pdfjs-dist/legacy/build/pdf.worker.mjs";
+
+// pdf.js loads its parser as a worker via a runtime dynamic import a bundler can't follow, so point
+// workerSrc at the real file. Resolving from this module's URL works under esbuild (real path), but a
+// Turbopack build gives a virtual URL that resolves to a non-existent path; fall back to the process
+// working directory, and verify the file exists before trusting either candidate.
+function resolveWorkerSrc(): string | undefined {
+  const bases = [import.meta.url, pathToFileURL(join(process.cwd(), "_")).href];
+  for (const base of bases) {
+    try {
+      const resolved = createRequire(base).resolve(WORKER_MODULE);
+      if (existsSync(resolved)) return resolved;
+    } catch {
+      // Try the next base.
+    }
+  }
+  return undefined;
+}
+
+const workerSrc = resolveWorkerSrc();
+if (workerSrc !== undefined) GlobalWorkerOptions.workerSrc = workerSrc;
 
 // Chromium emits a named destination for every id that something links to. We read those back with
 // pdf.js to learn which page each heading landed on — immune to duplicate text, emoji or wrapping,

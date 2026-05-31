@@ -1,4 +1,10 @@
-export type { RenderError, RenderInput, RenderPort, RenderResult } from "@md-pdf-studio/core";
+export type {
+  RenderError,
+  RenderInput,
+  RenderOptions,
+  RenderPort,
+  RenderResult,
+} from "@md-pdf-studio/core";
 export {
   buildDocument,
   buildTocHtml,
@@ -9,6 +15,7 @@ export {
   prepareContent,
   type TocOptions,
 } from "./document";
+export { buildPrintMeta, type PrintMeta } from "./headerFooter";
 export { readHeadingPages } from "./readPages";
 export {
   type ReadHeadingPages,

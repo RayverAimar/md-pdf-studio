@@ -1,18 +1,22 @@
-import type { RenderInput } from "@md-pdf-studio/core";
+import type { RenderInput, Theme } from "@md-pdf-studio/core";
 import { defaultPreset } from "@md-pdf-studio/core";
 import { describe, expect, it, vi } from "vitest";
 import type { HeadingPages } from "@/document";
+import type { RenderHtmlToPdf } from "@/twoPassToc";
 import { renderDocumentWithToc } from "@/twoPassToc";
 
 const decoder = new TextDecoder();
 
-function inputFrom(markdown: string): RenderInput {
-  return { markdown, theme: defaultPreset };
+function inputFrom(markdown: string, themeOverrides: Partial<Theme["values"]> = {}): RenderInput {
+  return {
+    markdown,
+    theme: { ...defaultPreset, values: { ...defaultPreset.values, ...themeOverrides } },
+  };
 }
 
 /** Records every HTML it is asked to render and returns the HTML as bytes so tests can inspect it. */
 function recordingRenderer(): {
-  renderHtmlToPdf: (html: string) => Promise<Uint8Array>;
+  renderHtmlToPdf: RenderHtmlToPdf;
   htmlOf: (call: number) => string;
   calls: () => number;
 } {
@@ -76,5 +80,32 @@ describe("renderDocumentWithToc", () => {
     );
 
     expect(renderer.calls()).toBe(3);
+  });
+
+  it("renders a single pass and never reads pages when the TOC is disabled", async () => {
+    const renderer = recordingRenderer();
+    const readPages = vi.fn<(pdf: Uint8Array, ids: string[]) => Promise<HeadingPages>>(() =>
+      Promise.resolve({ title: 2 }),
+    );
+
+    await renderDocumentWithToc(inputFrom("# Title\n\nbody", { "toc.enabled": false }), {
+      renderHtmlToPdf: renderer.renderHtmlToPdf,
+      readHeadingPages: readPages,
+    });
+
+    expect(renderer.calls()).toBe(1);
+    expect(readPages).not.toHaveBeenCalled();
+    expect(renderer.htmlOf(0)).not.toContain('<nav class="mdp-toc">');
+  });
+
+  it("respects the configured TOC depth", async () => {
+    const renderer = recordingRenderer();
+    await renderDocumentWithToc(inputFrom("# One\n\n## Two\n\n### Three", { "toc.depth": 1 }), {
+      renderHtmlToPdf: renderer.renderHtmlToPdf,
+      readHeadingPages: () => Promise.resolve({ one: 1 }),
+    });
+    const nav = renderer.htmlOf(0).match(/<nav class="mdp-toc">[\s\S]*?<\/nav>/)?.[0] ?? "";
+    expect(nav).toContain(">One<");
+    expect(nav).not.toContain(">Two<");
   });
 });
