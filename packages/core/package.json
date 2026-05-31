@@ -10,7 +10,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@shikijs/engine-javascript": "4.1.0",
@@ -18,12 +19,15 @@
     "@shikijs/themes": "4.1.0",
     "dompurify": "3.4.7",
     "markdown-it": "14.2.0",
+    "markdown-it-footnote": "4.0.0",
+    "markdown-it-task-lists": "2.1.1",
     "sanitize-html": "2.17.4",
     "shiki": "4.1.0"
   },
   "devDependencies": {
     "@types/markdown-it": "14.1.2",
     "@types/sanitize-html": "2.16.1",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "4.1.7"
   }
 }

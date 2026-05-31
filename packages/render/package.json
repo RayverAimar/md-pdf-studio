@@ -10,13 +10,16 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@md-pdf-studio/core": "workspace:*",
     "pdfjs-dist": "6.0.227"
   },
   "devDependencies": {
-    "typescript": "6.0.3"
+    "@types/node": "25.9.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.7"
   }
 }

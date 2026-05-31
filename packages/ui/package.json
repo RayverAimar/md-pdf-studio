@@ -9,11 +9,14 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@codemirror/lang-markdown": "6.5.0",
     "@md-pdf-studio/core": "workspace:*",
     "@uiw/react-codemirror": "4.25.10",
+    "dompurify": "3.4.7",
     "react": "19.2.6",
     "react-colorful": "5.7.0",
     "react-dom": "19.2.6",
@@ -22,6 +25,7 @@
   "devDependencies": {
     "@types/react": "19.2.15",
     "@types/react-dom": "19.2.3",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "4.1.7"
   }
 }
