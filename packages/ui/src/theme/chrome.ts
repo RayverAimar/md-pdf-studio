@@ -261,8 +261,15 @@ export const CHROME_CSS = `
   margin-right: auto;
   font-size: 15px;
 }
-/* The mark inherits the token via currentColor so the logo color stays single-sourced in Chrome.accent. */
-.${UiClass.brandMark} { color: var(--ui-accent); display: block; flex: 0 0 auto; }
+/* The mark is a dark raster tile; a hairline border keeps its edge defined on both light and dark toolbars. */
+.${UiClass.brandMark} {
+  display: block;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid var(--ui-border);
+}
 /* The hyphenated wordmark must never break across lines at its hyphens. */
 .${UiClass.brandWordmark} { color: var(--ui-text); white-space: nowrap; }
 .${UiClass.toolbarGroup} { display: flex; align-items: center; gap: ${s.sm}; }
@@ -543,8 +550,8 @@ export const CHROME_CSS = `
 @media (forced-colors: active) {
   .${UiClass.toast} { border: 1px solid CanvasText; }
   .${UiClass.modal} { border: 1px solid CanvasText; }
-  /* High Contrast flattens the accent fill, so keep the mark visible with a system color. */
-  .${UiClass.brandMark} { color: LinkText; }
+  /* Forced colors can drop the hairline; keep the raster mark's edge with a system color. */
+  .${UiClass.brandMark} { border-color: CanvasText; }
   /* High Contrast flattens the accent fill, so cue the selected segment with the system Highlight pair. */
   .${UiClass.segmentActive} { background: Highlight; color: HighlightText; }
 }
