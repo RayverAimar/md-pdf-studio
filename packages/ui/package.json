@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@codemirror/lang-markdown": "6.5.0",
+    "@codemirror/language": "6.12.3",
+    "@lezer/highlight": "1.2.3",
     "@md-pdf-studio/core": "workspace:*",
     "@md-pdf-studio/render": "workspace:*",
     "@uiw/react-codemirror": "4.25.10",

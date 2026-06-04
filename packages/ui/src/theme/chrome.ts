@@ -59,7 +59,11 @@ const darkColors: ChromeColors = {
   shadowPop: "0 12px 32px rgba(0,0,0,0.55)",
 } as const;
 
-const Chrome = {
+// Exported so the CodeMirror editor theme (editorTheme.ts) can pull its CONTAINER colors (surface,
+// text, gutter, selection) from the same token maps instead of re-hardcoding hexes. Only the syntax
+// highlight colors stay as sibling literals there, because CodeMirror's HighlightStyle is built before
+// the CSSOM resolves the --ui-* vars and cannot read CSS custom properties.
+export const Chrome = {
   color: { light: lightColors, dark: darkColors },
   radius: { sm: "7px", md: "10px", lg: "16px" },
   space: { xs: "4px", sm: "8px", md: "12px", lg: "16px", xl: "24px" },
@@ -223,6 +227,10 @@ export const CHROME_CSS = `
 /* Dark scope: scoped to the shell so nothing outside the editor changes and the preview iframe — a
    separate document with its own CSSOM — can never see these vars. */
 .${UiClass.shell}[data-ui-theme="dark"] { ${emitColorVars(Chrome.color.dark)} }
+/* Tell the UA to paint dark scrollbars and native form-control internals across the chrome subtree;
+   without this Chromium renders light-on-dark scrollbars that read as broken. Scoped to the dark shell
+   so light is untouched, and the preview iframe (its own document/CSSOM) never inherits it. */
+.${UiClass.shell}[data-ui-theme="dark"] { color-scheme: dark; }
 .${UiClass.shell} {
   position: fixed;
   inset: 0;
