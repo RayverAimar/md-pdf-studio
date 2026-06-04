@@ -68,6 +68,7 @@ export function ControlField({
           controlId={controlId}
           locale={locale}
           inputId={inputId}
+          label={label}
           value={typeof value === "boolean" ? String(value) : value}
           onChange={onChange}
         />

@@ -102,6 +102,12 @@ export const UiClass = {
   number: "ui-number",
   unit: "ui-unit",
   select: "ui-select",
+  selectTrigger: "ui-select-trigger",
+  selectChevron: "ui-select-chevron",
+  selectMenu: "ui-select-menu",
+  selectOption: "ui-select-option",
+  selectOptionActive: "ui-select-option--active",
+  selectOptionSelected: "ui-select-option--selected",
   toggle: "ui-toggle",
   swatch: "ui-swatch",
   swatchPop: "ui-swatch-pop",
@@ -188,6 +194,10 @@ export const PREVIEW_FRAME = {
 
 const s = Chrome.space;
 const r = Chrome.radius;
+
+// Caps the custom dropdown menu so a long option list scrolls inside it; shared with the Dropdown
+// component's flip math so the CSS cap and the viewport-edge estimate can never drift apart.
+export const MENU_MAX_HEIGHT_PX = 280;
 
 // One emitter for every color var so a token rename can never leave a stale literal; both schemes feed
 // the same function, guaranteeing the light and dark sets stay structurally identical.
@@ -359,6 +369,48 @@ export const CHROME_CSS = `
   background: var(--ui-surface);
 }
 .${UiClass.select} { flex: 1 1 auto; }
+/* The bare .ui-select box is block-ish for a native <select>; as the custom trigger <button> it needs
+   flex layout to seat the selected label and the chevron at opposite ends. */
+.${UiClass.selectTrigger} {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${s.sm};
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.${UiClass.selectChevron} { color: var(--ui-text-faint); transition: transform 0.15s ease; flex: 0 0 auto; }
+.${UiClass.selectChevron}.is-open { transform: rotate(180deg); }
+/* Popover surface; same elevation recipe as .ui-swatch-pop, plus a content-driven scroll cap and a
+   min-width so the menu is never narrower than the trigger that opened it. */
+.${UiClass.selectMenu} {
+  position: absolute;
+  z-index: 20;
+  min-width: 100%;
+  max-height: ${MENU_MAX_HEIGHT_PX}px;
+  overflow-y: auto;
+  padding: ${s.xs};
+  margin-block: ${s.xs};
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  box-shadow: var(--ui-shadow-pop);
+  list-style: none;
+}
+.${UiClass.selectOption} {
+  display: flex;
+  align-items: center;
+  padding: ${s.xs} ${s.sm};
+  border-radius: var(--ui-radius-sm);
+  cursor: pointer;
+  color: var(--ui-text);
+  white-space: nowrap;
+}
+/* "Highlighted" (keyboard/hover position) reads as a surface tint, distinct from "selected" below. */
+.${UiClass.selectOptionActive} { background: var(--ui-surface-hover); }
+.${UiClass.selectOptionSelected} { font-weight: 600; }
+.${UiClass.selectOptionSelected}::after { content: "✓"; margin-left: auto; padding-left: ${s.sm}; }
 .${UiClass.hexInput} { width: 92px; font-family: var(--ui-font-mono); font-size: 12px; text-transform: lowercase; }
 .${UiClass.toggle} { width: 38px; height: 22px; accent-color: var(--ui-accent); cursor: pointer; }
 .${UiClass.swatch} {
@@ -554,10 +606,16 @@ export const CHROME_CSS = `
   .${UiClass.brandMark} { border-color: CanvasText; }
   /* High Contrast flattens the accent fill, so cue the selected segment with the system Highlight pair. */
   .${UiClass.segmentActive} { background: Highlight; color: HighlightText; }
+  /* Token backgrounds flatten in High Contrast, so redraw the menu edge and cue the option states with
+     system colors (same approach as .ui-segment-active above). */
+  .${UiClass.selectMenu} { border: 1px solid CanvasText; }
+  .${UiClass.selectOptionActive} { background: Highlight; color: HighlightText; }
+  .${UiClass.selectOptionSelected} { forced-color-adjust: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .${UiClass.focusPulse} { animation: none; }
   .${UiClass.sectionChevron} { transition: none; }
+  .${UiClass.selectChevron} { transition: none; }
   .${UiClass.toast} { transition: none; }
 }
 /* The fixed three-column grid degrades gracefully: first the editor folds under the preview, then the
