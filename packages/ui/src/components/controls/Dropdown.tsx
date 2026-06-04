@@ -16,6 +16,8 @@ interface DropdownProps {
   options: DropdownOption[];
   value: string;
   onChange: (key: string) => void;
+  // Forwarded to the trigger's aria-describedby so the row tooltip is announced when it takes focus.
+  describedBy?: string;
 }
 
 // Estimated menu geometry for the viewport-edge flip test: a content-driven height capped so a long
@@ -72,7 +74,7 @@ export function matchTypeAhead(
 // separate <ul role="listbox"> popup. Focus stays on the trigger the whole time (aria-activedescendant
 // virtual focus), so dismiss is the ColorControl pointerdown/Escape recipe and focus-return is implicit.
 // Chrome-only and value-agnostic: callers stringify on the way in and map key->typed value on the way out.
-export function Dropdown({ id, label, options, value, onChange }: DropdownProps) {
+export function Dropdown({ id, label, options, value, onChange, describedBy }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [flip, setFlip] = useState({ up: false, alignRight: false });
@@ -240,6 +242,7 @@ export function Dropdown({ id, label, options, value, onChange }: DropdownProps)
         aria-expanded={open}
         aria-controls={listboxId}
         aria-label={label}
+        {...(describedBy !== undefined ? { "aria-describedby": describedBy } : {})}
         {...(open && activeIndex >= 0 && options[activeIndex] !== undefined
           ? { "aria-activedescendant": optionId(options[activeIndex].key) }
           : {})}

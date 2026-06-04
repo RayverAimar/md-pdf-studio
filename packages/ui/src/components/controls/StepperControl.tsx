@@ -11,6 +11,8 @@ interface StepperControlProps {
   value: number;
   locale: Locale;
   onChange: (value: number) => void;
+  // Forwarded to the number input so the row tooltip is announced when the spinbutton takes focus.
+  describedBy?: string;
 }
 
 // A spinbutton (−/+ around a native number input) for the small discrete integer domains where a drag
@@ -23,6 +25,7 @@ export function StepperControl({
   value,
   locale,
   onChange,
+  describedBy,
 }: StepperControlProps) {
   const { min, max } = control;
   const step = control.step ?? 1;
@@ -59,6 +62,7 @@ export function StepperControl({
         max={max}
         step={step}
         value={draft}
+        {...(describedBy !== undefined ? { "aria-describedby": describedBy } : {})}
         onChange={(event) => commit(event.target.value)}
         onBlur={() => setDraft(String(value))}
       />

@@ -1,18 +1,19 @@
 import type { SectionId } from "@md-pdf-studio/core";
 import { create } from "zustand";
+import { SECTION_ORDER } from "../constants";
 
 interface UiState {
-  /** Section the controls panel should reveal, set by clicking an element in the preview. */
-  focusedSection: SectionId | null;
-  /** Bumped on every focus so re-clicking the same section still re-triggers the reveal. */
-  focusToken: number;
+  /** The selected ribbon tab — the single source of truth for which section's controls are shown. */
+  activeSection: SectionId;
+  /** Tab click or arrow-key navigation in the ribbon. */
+  setActiveSection: (section: SectionId) => void;
+  /** A click on a rendered element in the preview switches the ribbon to that element's section tab. */
   focusSection: (section: SectionId) => void;
 }
 
-/** Ephemeral editor UI state (not persisted): which section the preview asked the panel to reveal. */
+/** Ephemeral editor UI state (not persisted): which ribbon tab is currently open. */
 export const useUiStore = create<UiState>((set) => ({
-  focusedSection: null,
-  focusToken: 0,
-  focusSection: (section) =>
-    set((state) => ({ focusedSection: section, focusToken: state.focusToken + 1 })),
+  activeSection: SECTION_ORDER[0] as SectionId,
+  setActiveSection: (section) => set({ activeSection: section }),
+  focusSection: (section) => set({ activeSection: section }),
 }));

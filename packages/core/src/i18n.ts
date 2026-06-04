@@ -78,6 +78,9 @@ const Messages = {
   footerPage: { en: "Page", es: "Página" },
   switchToDark: { en: "Switch to dark theme", es: "Cambiar a tema oscuro" },
   switchToLight: { en: "Switch to light theme", es: "Cambiar a tema claro" },
+  collapseRibbon: { en: "Collapse ribbon", es: "Contraer cinta" },
+  expandRibbon: { en: "Expand ribbon", es: "Expandir cinta" },
+  rangeTo: { en: "to", es: "a" },
 } satisfies Record<string, Localized>;
 
 export type MessageKey = keyof typeof Messages;
