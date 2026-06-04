@@ -18,6 +18,11 @@ const Chrome = {
     accentText: "#ffffff",
     focus: "#3b82f6",
     danger: "#be123c",
+    success: "#15803d",
+    successSurface: "#ecfdf3",
+    info: "#1d4ed8",
+    infoSurface: "#eff6ff",
+    dangerSurface: "#fef2f2",
   },
   radius: { sm: "6px", md: "9px", lg: "14px" },
   space: { xs: "4px", sm: "8px", md: "12px", lg: "18px", xl: "28px" },
@@ -69,6 +74,14 @@ export const UiClass = {
   focusPulse: "ui-focus-pulse",
   srOnly: "ui-sr-only",
   pageFrame: "ui-page-frame",
+  toastViewport: "ui-toast-viewport",
+  toastRegion: "ui-toast-region",
+  toast: "ui-toast",
+  toastMessage: "ui-toast-message",
+  toastDismiss: "ui-toast-dismiss",
+  toastSuccess: "ui-toast-success",
+  toastError: "ui-toast-error",
+  toastInfo: "ui-toast-info",
 } as const;
 
 const PAGE_FRAME_STYLE_ID = "ui-page-frame-style";
@@ -115,6 +128,11 @@ export const CHROME_CSS = `
   --ui-accent-text: ${c.accentText};
   --ui-focus: ${c.focus};
   --ui-danger: ${c.danger};
+  --ui-success: ${c.success};
+  --ui-success-surface: ${c.successSurface};
+  --ui-info: ${c.info};
+  --ui-info-surface: ${c.infoSurface};
+  --ui-danger-surface: ${c.dangerSurface};
   --ui-radius-sm: ${r.sm};
   --ui-radius-md: ${r.md};
   --ui-radius-lg: ${r.lg};
@@ -311,9 +329,53 @@ export const CHROME_CSS = `
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
 .${UiClass.shell} :focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 1px; border-radius: var(--ui-radius-sm); }
+.${UiClass.toastViewport} {
+  position: fixed;
+  inset: auto ${s.lg} ${s.lg} auto;
+  z-index: 50;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: ${s.sm};
+  max-width: min(380px, calc(100vw - ${s.xl}));
+  pointer-events: none;
+}
+.${UiClass.toastRegion} { display: contents; }
+.${UiClass.toast} {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: ${s.sm};
+  padding: ${s.sm} ${s.md};
+  border: 1px solid var(--ui-border);
+  border-left: 3px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  font-size: 13px;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.${UiClass.toastSuccess} { background: var(--ui-success-surface); border-left-color: var(--ui-success); }
+.${UiClass.toastError} { background: var(--ui-danger-surface); border-left-color: var(--ui-danger); }
+.${UiClass.toastInfo} { background: var(--ui-info-surface); border-left-color: var(--ui-info); }
+.${UiClass.toastMessage} { flex: 1 1 auto; }
+.${UiClass.toastDismiss} {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ui-text-faint);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+}
+.${UiClass.toastDismiss}:hover { color: var(--ui-text); }
+@media (forced-colors: active) { .${UiClass.toast} { border: 1px solid CanvasText; } }
 @media (prefers-reduced-motion: reduce) {
   .${UiClass.focusPulse} { animation: none; }
   .${UiClass.sectionChevron} { transition: none; }
+  .${UiClass.toast} { transition: none; }
 }
 /* The fixed three-column grid degrades gracefully: first the editor folds under the preview, then the
    controls drop below as the viewport narrows, so each pane keeps a usable width on small screens. */

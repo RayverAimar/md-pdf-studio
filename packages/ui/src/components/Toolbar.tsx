@@ -6,6 +6,7 @@ import { exportPdf } from "../render/renderClient";
 import { useDocumentStore } from "../store/documentStore";
 import { useLocaleStore } from "../store/localeStore";
 import { useThemeStore } from "../store/themeStore";
+import { toast } from "../store/toastStore";
 import { UiClass } from "../theme/chrome";
 import { DocumentMenu } from "./DocumentMenu";
 import { LanguageSelector } from "./LanguageSelector";
@@ -16,17 +17,16 @@ export function Toolbar() {
   const dirty = useThemeStore((state) => state.dirty);
   const reset = useThemeStore((state) => state.reset);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const onExport = async (): Promise<void> => {
     setBusy(true);
-    setError(null);
     // Read at click time so the export reflects the current document and theme, not a stale capture.
     const { markdown } = useDocumentStore.getState();
     const { theme } = useThemeStore.getState();
     const { locale: currentLocale } = useLocaleStore.getState();
     const outcome = await exportPdf(markdown, theme, currentLocale);
-    if (!outcome.ok) setError(outcome.message);
+    if (outcome.ok) toast.success(message("pdfExported", currentLocale));
+    else toast.error(`${message("exportFailed", currentLocale)} — ${outcome.message}`);
     setBusy(false);
   };
 
@@ -50,11 +50,6 @@ export function Toolbar() {
 
       <div className={UiClass.toolbarGroup}>
         <LanguageSelector />
-        {error !== null ? (
-          <span style={{ color: "var(--ui-danger)", fontSize: "12px" }} title={error} role="alert">
-            {message("exportFailed", locale)}
-          </span>
-        ) : null}
         <button
           type="button"
           className={`${UiClass.btn} ${UiClass.btnPrimary}`}
