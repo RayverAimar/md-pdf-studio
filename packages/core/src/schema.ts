@@ -1248,7 +1248,7 @@ const controls: Record<string, ControlDef> = {
     control: "toggle",
     default: true,
     css: {
-      whenTrue: `${Selector.tocLeader} { flex: 1; border-bottom: 1px dotted currentColor; margin: 0 0.4em; transform: translateY(-0.25em); }`,
+      whenTrue: `${Selector.tocLeader} { border-bottom: 1px dotted currentColor; margin: 0 0.4em; transform: translateY(-0.25em); }`,
     },
     section: Section.toc,
     label: "Leader dots",

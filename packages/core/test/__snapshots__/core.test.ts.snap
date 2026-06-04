@@ -136,5 +136,5 @@ exports[`generateCss — golden + layering > matches the golden snapshot for the
 .mdp-codeblock, .mdp-codeblock code { white-space: pre-wrap; word-break: break-word; }
 .mdp-h1,.mdp-h2,.mdp-h3,.mdp-h4,.mdp-h5,.mdp-h6 { break-after: avoid; }
 .mdp-table tbody tr:nth-child(even) { background: var(--mdp-table-stripe); }
-.mdp-toc-leader { flex: 1; border-bottom: 1px dotted currentColor; margin: 0 0.4em; transform: translateY(-0.25em); }"
+.mdp-toc-leader { border-bottom: 1px dotted currentColor; margin: 0 0.4em; transform: translateY(-0.25em); }"
 `;
