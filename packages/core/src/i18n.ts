@@ -32,6 +32,8 @@ const Messages = {
   exportPdf: { en: "Export PDF", es: "Exportar PDF" },
   generating: { en: "Generating…", es: "Generando…" },
   language: { en: "Language", es: "Idioma" },
+  increment: { en: "Increase", es: "Aumentar" },
+  decrement: { en: "Decrease", es: "Disminuir" },
   resetAll: { en: "Reset all", es: "Restablecer todo" },
   search: { en: "Search", es: "Buscar" },
   preset: { en: "Preset", es: "Preajuste" },

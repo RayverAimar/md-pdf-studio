@@ -24,8 +24,10 @@ export const ControlRow = memo(function ControlRow({
   const label = controlLabel(id, control.label, locale);
   const inputId = `ctl-${id}`;
   // Only numeric rows expose multiple trailing flex children, so the reserved-slot alignment fix is
-  // scoped to them; color/select/toggle keep the bare field class and stay visually unchanged.
-  const isNumeric = control.control === "slider" || control.control === "number";
+  // scoped to them; the stepper's −/input/+ trio benefits from the same right-edge slot, while
+  // color/select/segmented/toggle keep the bare field class and stay visually unchanged.
+  const isNumeric =
+    control.control === "slider" || control.control === "number" || control.control === "stepper";
   return (
     <div className={UiClass.row}>
       <label className={UiClass.rowLabel} htmlFor={inputId}>
