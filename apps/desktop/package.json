@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "description": "Visual Markdown to PDF editor with granular, schema-driven styling",
+  "author": {
+    "name": "Rayver Muñoz Curi",
+    "email": "ragi@burhum.com"
+  },
   "main": "dist/main.mjs",
   "scripts": {
     "build": "node esbuild.mjs",
@@ -22,16 +27,29 @@
       "dist/**/*",
       "build/icon.*"
     ],
+    "npmRebuild": false,
+    "nodeGypRebuild": false,
     "mac": {
       "icon": "build/icon.icns",
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
     },
     "win": {
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "target": [
+        "nsis"
+      ]
     },
     "linux": {
       "icon": "build/icon.png",
-      "category": "Office"
+      "category": "Office",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
     }
   },
   "dependencies": {
@@ -43,6 +61,7 @@
   "devDependencies": {
     "@types/node": "25.9.1",
     "electron": "42.3.0",
+    "electron-builder": "26.8.1",
     "esbuild": "0.28.0",
     "typescript": "6.0.3"
   }

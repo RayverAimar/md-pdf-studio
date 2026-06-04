@@ -1,0 +1,39 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      # onlyBuiltDependencies:["electron"] lets electron's postinstall run under pnpm 9
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @md-pdf-studio/web build
+      - run: pnpm --filter @md-pdf-studio/desktop build
+      - name: Package desktop installers
+        run: pnpm --filter @md-pdf-studio/desktop exec electron-builder --publish never
+        env:
+          # no Apple cert in CI; produce an unsigned build instead of failing
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      - uses: softprops/action-gh-release@v2
+        with:
+          # each OS uploads only the artifacts it produced; unmatched globs are skipped
+          files: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/*.deb
+          fail_on_unmatched_files: false
