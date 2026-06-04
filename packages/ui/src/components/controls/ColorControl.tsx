@@ -10,6 +10,8 @@ interface ColorControlProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  // Forwarded to the hex input so the row tooltip is announced when the field takes keyboard focus.
+  describedBy?: string;
 }
 
 const POPOVER_WIDTH = 220;
@@ -17,7 +19,7 @@ const POPOVER_HEIGHT = 200;
 const EDGE_GAP = 8;
 
 /** Swatch that opens a hex picker, plus a text field for typing an exact value. */
-export function ColorControl({ inputId, label, value, onChange }: ColorControlProps) {
+export function ColorControl({ inputId, label, value, onChange, describedBy }: ColorControlProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
   const [flip, setFlip] = useState({ up: false, alignRight: false });
@@ -73,7 +75,9 @@ export function ColorControl({ inputId, label, value, onChange }: ColorControlPr
   };
 
   return (
-    <div ref={containerRef} style={{ position: "relative", display: "flex", gap: "8px", flex: 1 }}>
+    // position:relative stays inline since it anchors the flip-positioned popover; the flex/gap moved to
+    // a class so the compact ribbon skin can tighten the swatch+hex spacing without an inline override.
+    <div ref={containerRef} className={UiClass.colorField} style={{ position: "relative" }}>
       <button
         ref={swatchRef}
         type="button"
@@ -90,6 +94,7 @@ export function ColorControl({ inputId, label, value, onChange }: ColorControlPr
         className={UiClass.hexInput}
         value={draft}
         spellCheck={false}
+        {...(describedBy !== undefined ? { "aria-describedby": describedBy } : {})}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commitDraft}
         onKeyDown={(event) => {

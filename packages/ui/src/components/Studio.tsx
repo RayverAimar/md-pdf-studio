@@ -6,6 +6,7 @@ import { useColorSchemeStore } from "../store/colorSchemeStore";
 import { useDocumentStore } from "../store/documentStore";
 import { useLocaleStore } from "../store/localeStore";
 import { StorageKey } from "../store/persistence";
+import { useRibbonStore } from "../store/ribbonStore";
 import { useThemeStore } from "../store/themeStore";
 import { AppShell } from "./AppShell";
 
@@ -26,6 +27,7 @@ export function Studio() {
         useThemeStore.persist.rehydrate(),
         useLocaleStore.persist.rehydrate(),
         useColorSchemeStore.persist.rehydrate(),
+        useRibbonStore.persist.rehydrate(),
       ]);
       if (storedLocale === null)
         useLocaleStore.getState().setLocale(resolveLocale(navigator.language));

@@ -11,6 +11,8 @@ interface SelectControlProps {
   label: string;
   value: string | number;
   onChange: (value: string | number) => void;
+  // Forwarded to the dropdown trigger so the row tooltip is announced when the combobox takes focus.
+  describedBy?: string;
 }
 
 interface Option {
@@ -50,6 +52,7 @@ export function SelectControl({
   label,
   value,
   onChange,
+  describedBy,
 }: SelectControlProps) {
   const options = optionsFor(control, controlId, locale);
   // Resolving key back to its typed schema value stays here, keeping the no-free-CSS guarantee local to
@@ -65,6 +68,7 @@ export function SelectControl({
       label={label}
       options={options.map(({ key, label: optLabel }) => ({ key, label: optLabel }))}
       value={String(value)}
+      {...(describedBy !== undefined ? { describedBy } : {})}
       onChange={emit}
     />
   );

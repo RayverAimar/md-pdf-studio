@@ -11,6 +11,9 @@ interface NumericControlProps {
   value: number;
   onChange: (value: number) => void;
   withSlider: boolean;
+  // Forwarded to the number input's aria-describedby so the row tooltip is announced when the field
+  // itself takes keyboard focus, not only on row hover/focus.
+  describedBy?: string;
 }
 
 /** Slider + number entry for dimensions, weights and unitless numbers. Bounds come from the schema. */
@@ -21,6 +24,7 @@ export function NumericControl({
   value,
   onChange,
   withSlider,
+  describedBy,
 }: NumericControlProps) {
   const { min, max, step, unit } = control;
   // Hold the number field as a draft string so it can be transiently empty mid-edit; an empty parse
@@ -57,6 +61,7 @@ export function NumericControl({
         max={max}
         step={step}
         value={draft}
+        {...(describedBy !== undefined ? { "aria-describedby": describedBy } : {})}
         onChange={(event) => commit(event.target.value)}
         onBlur={() => setDraft(String(value))}
       />

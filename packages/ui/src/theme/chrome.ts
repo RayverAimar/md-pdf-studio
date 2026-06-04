@@ -85,19 +85,33 @@ export const UiClass = {
   pane: "ui-pane",
   paneEditor: "ui-pane-editor",
   panePreview: "ui-pane-preview",
-  paneControls: "ui-pane-controls",
   paneHead: "ui-pane-head",
   paneBody: "ui-pane-body",
   previewFrame: "ui-preview-frame",
   editorHost: "ui-editor-host",
-  section: "ui-section",
-  sectionHead: "ui-section-head",
-  sectionBody: "ui-section-body",
-  sectionChevron: "ui-section-chevron",
+  ribbon: "ui-ribbon",
+  ribbonTabs: "ui-ribbon-tabs",
+  tablist: "ui-tablist",
+  tab: "ui-tab",
+  tabActive: "ui-tab--active",
+  ribbonSearch: "ui-ribbon-search",
+  ribbonBand: "ui-ribbon-band",
+  ribbonGroup: "ui-ribbon-group",
+  ribbonGroupLabel: "ui-ribbon-group-label",
+  ribbonGroupBody: "ui-ribbon-group-body",
+  ribbonToggle: "ui-ribbon-toggle",
+  ribbonChevron: "ui-ribbon-chevron",
+  ctlGroup: "ui-ctl-group",
+  ctlGroupLabel: "ui-ctl-group-label",
+  ctlGroupBody: "ui-ctl-group-body",
+  tooltipWrap: "ui-tooltipWrap",
+  tooltip: "ui-tooltip",
   row: "ui-row",
+  rowCompact: "ui-row--compact",
   rowLabel: "ui-row-label",
   rowField: "ui-row-field",
   rowFieldNumeric: "ui-row-field--numeric",
+  colorField: "ui-color-field",
   slider: "ui-slider",
   number: "ui-number",
   unit: "ui-unit",
@@ -122,7 +136,6 @@ export const UiClass = {
   colorSchemeToggle: "ui-color-scheme-toggle",
   flag: "ui-flag",
   empty: "ui-empty",
-  focusPulse: "ui-focus-pulse",
   srOnly: "ui-sr-only",
   pageFrame: "ui-page-frame",
   toastViewport: "ui-toast-viewport",
@@ -283,10 +296,123 @@ export const CHROME_CSS = `
 /* The hyphenated wordmark must never break across lines at its hyphens. */
 .${UiClass.brandWordmark} { color: var(--ui-text); white-space: nowrap; }
 .${UiClass.toolbarGroup} { display: flex; align-items: center; gap: ${s.sm}; }
+.${UiClass.ribbon} {
+  flex: 0 0 auto;
+  background: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-border);
+}
+.${UiClass.ribbonTabs} {
+  display: flex;
+  align-items: center;
+  gap: ${s.sm};
+  padding: 0 ${s.lg};
+  border-bottom: 1px solid var(--ui-border);
+}
+.${UiClass.tablist} {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+.${UiClass.tab} {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  padding: ${s.sm} ${s.md};
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--ui-text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.${UiClass.tab}:hover { color: var(--ui-text); background: var(--ui-surface-hover); }
+.${UiClass.tabActive} { color: var(--ui-accent); border-bottom-color: var(--ui-accent); }
+.${UiClass.ribbonSearch} { flex: 0 0 auto; }
+.${UiClass.ribbonSearch} .${UiClass.search} { width: clamp(160px, 22vw, 260px); }
+/* Word's collapse caret, pinned to the ribbon's trailing edge: it toggles the controls band away to
+   maximize the editor/preview, while the tab strip stays visible. */
+.${UiClass.ribbonToggle} {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--ui-text-faint);
+  border-radius: var(--ui-radius-sm);
+  cursor: pointer;
+}
+.${UiClass.ribbonToggle}:hover { background: var(--ui-surface-hover); color: var(--ui-text); }
+/* Chevron points up when the band is expanded (collapse hint) and down when collapsed; same transition
+   recipe as the dropdown chevron. */
+.${UiClass.ribbonChevron} { transition: transform 0.15s ease; transform: rotate(180deg); }
+.${UiClass.ribbonChevron}.is-collapsed { transform: rotate(0deg); }
+/* The active section's controls tile as Word-style "groups": a wrapping flex band of compact inline
+   rows split into labelled columns, so a typical section reads cleanly in one or two rows. The band is
+   bounded by max-height (not a fixed height) so a section that fits stays short with no dead space,
+   while a control-heavy section caps and scrolls INTERNALLY — it can never bleed over the panes below.
+   overscroll-behavior:contain keeps a band scroll from chaining to the page. */
+.${UiClass.ribbonBand} {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: ${s.md} ${s.lg};
+  padding: ${s.md} ${s.lg};
+  max-height: clamp(120px, 22vh, 200px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+/* In search mode the band stacks per-section groups full width; each group's rows wrap inside it. */
+.${UiClass.ribbonGroup} { flex: 1 1 100%; display: grid; gap: ${s.sm}; }
+.${UiClass.ribbonGroupLabel} {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ui-text-faint);
+}
+/* Search results tile compact rows into responsive columns so a long match list reads densely; the rows
+   themselves carry the compact skin (same as the active tab) for a consistent ribbon feel. */
+.${UiClass.ribbonGroupBody} {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2px ${s.lg};
+}
+/* The active tab's controls split into Word-style "group" columns by control-id prefix, each a tight
+   stack of compact rows with a faint divider; sections that don't sub-divide collapse to one column. */
+.${UiClass.ctlGroup} {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: ${s.md};
+  border-right: 1px solid var(--ui-border);
+}
+.${UiClass.ctlGroup}:last-child { border-right: none; padding-right: 0; }
+.${UiClass.ctlGroupLabel} {
+  margin: 0 0 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ui-text-faint);
+}
+.${UiClass.ctlGroupBody} { display: flex; flex-direction: column; gap: 2px; }
 .${UiClass.grid} {
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: minmax(280px, 0.85fr) minmax(420px, 1.4fr) minmax(300px, 0.95fr);
+  grid-template-columns: 1fr 1fr;
   min-height: 0;
   background: var(--ui-border);
   gap: 1px;
@@ -322,27 +448,40 @@ export const CHROME_CSS = `
   border: none;
   background: var(--ui-surface-sunken);
 }
-.${UiClass.section} { border-bottom: 1px solid var(--ui-border); }
-.${UiClass.sectionHead} {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: ${s.sm};
-  padding: ${s.md};
-  background: none;
-  border: none;
-  font: inherit;
-  font-weight: 600;
-  color: var(--ui-text);
-  cursor: pointer;
-  text-align: left;
-}
-.${UiClass.sectionHead}:hover { background: var(--ui-surface-hover); }
-.${UiClass.sectionChevron} { color: var(--ui-text-faint); transition: transform 0.15s ease; }
-.${UiClass.sectionBody} { padding: 0 ${s.md} ${s.md}; display: grid; gap: ${s.md}; }
 .${UiClass.row} { display: grid; grid-template-columns: 1fr; gap: ${s.xs}; }
 .${UiClass.rowLabel} { font-size: 12px; color: var(--ui-text-muted); font-weight: 500; }
 .${UiClass.rowField} { display: flex; align-items: center; gap: ${s.sm}; }
+.${UiClass.colorField} { display: flex; align-items: center; gap: ${s.sm}; flex: 1; min-width: 0; }
+/* Compact Word-ribbon row: label INLINE with the field at a tight ~26px height, so a section reads in a
+   couple of group rows instead of a tall scrolling strip. min-width:0 on the field lets the slider shrink
+   into its cell and never overflow. Widget sizing below is scoped to this modifier so the search-mode and
+   non-compact rows stay roomy. */
+.${UiClass.rowCompact} {
+  grid-template-columns: minmax(64px, 96px) 1fr;
+  align-items: center;
+  column-gap: ${s.sm};
+  row-gap: 0;
+  min-height: 26px;
+}
+.${UiClass.rowCompact} .${UiClass.rowLabel} {
+  font-size: 11.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.${UiClass.rowCompact} .${UiClass.rowField} { gap: 6px; min-width: 0; }
+.${UiClass.rowCompact} .${UiClass.colorField} { gap: 6px; }
+.${UiClass.rowCompact} .${UiClass.slider} { height: 16px; }
+.${UiClass.rowCompact} .${UiClass.number} { width: 52px; padding: 2px 6px; font-size: 11.5px; }
+.${UiClass.rowCompact} .${UiClass.unit} { min-width: 0; font-size: 10.5px; }
+.${UiClass.rowCompact} .${UiClass.swatch} { width: 20px; height: 20px; }
+.${UiClass.rowCompact} .${UiClass.hexInput} { width: 74px; padding: 2px 6px; font-size: 11px; }
+.${UiClass.rowCompact} .${UiClass.segment} { min-height: 24px; font-size: 11px; padding: ${s.xs} ${s.sm}; }
+.${UiClass.rowCompact} .${UiClass.btn} { min-height: 24px; }
+.${UiClass.rowCompact} .${UiClass.toggle} { width: 32px; height: 18px; }
+.${UiClass.rowCompact} .${UiClass.select} { min-height: 24px; font-size: 12px; }
 .${UiClass.slider} { flex: 1 1 auto; accent-color: var(--ui-accent); }
 .${UiClass.number} {
   width: 64px;
@@ -488,11 +627,30 @@ export const CHROME_CSS = `
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ui-text) 14%, transparent);
 }
 .${UiClass.empty} { padding: ${s.lg}; color: var(--ui-text-faint); font-size: 13px; text-align: center; }
-.${UiClass.focusPulse} { animation: ui-pulse 1.1s ease; }
-@keyframes ui-pulse {
-  0% { background: color-mix(in srgb, var(--ui-accent) 16%, transparent); }
-  100% { background: transparent; }
+/* Lightweight APG tooltip: the wrapper anchors the absolutely-placed tip above its trigger. The tip is
+   always in the DOM (so aria-describedby resolves) and shown via [hidden] toggling. pointer-events:none
+   keeps it non-interactive (no focus trap); z-index sits above band content but below the toast viewport. */
+.${UiClass.tooltipWrap} { position: relative; }
+.${UiClass.tooltip} {
+  position: absolute;
+  z-index: 30;
+  bottom: calc(100% + 6px);
+  left: 0;
+  max-width: 260px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--ui-text);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-sm);
+  box-shadow: var(--ui-shadow-pop);
+  pointer-events: none;
+  white-space: normal;
+  opacity: 0;
+  transition: opacity 0.12s ease;
 }
+.${UiClass.tooltip}:not([hidden]) { opacity: 1; }
 .${UiClass.srOnly} {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -606,38 +764,44 @@ export const CHROME_CSS = `
   .${UiClass.brandMark} { border-color: CanvasText; }
   /* High Contrast flattens the accent fill, so cue the selected segment with the system Highlight pair. */
   .${UiClass.segmentActive} { background: Highlight; color: HighlightText; }
+  /* Same reasoning for the active ribbon tab, whose accent underline also flattens. */
+  .${UiClass.tabActive} { border-bottom-color: Highlight; color: Highlight; }
   /* Token backgrounds flatten in High Contrast, so redraw the menu edge and cue the option states with
      system colors (same approach as .ui-segment-active above). */
   .${UiClass.selectMenu} { border: 1px solid CanvasText; }
   .${UiClass.selectOptionActive} { background: Highlight; color: HighlightText; }
   .${UiClass.selectOptionSelected} { forced-color-adjust: none; }
+  /* Token surface/shadow flatten in High Contrast, so keep the tooltip's edge with a system color. */
+  .${UiClass.tooltip} { border: 1px solid CanvasText; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .${UiClass.focusPulse} { animation: none; }
-  .${UiClass.sectionChevron} { transition: none; }
+  .${UiClass.tablist} { scroll-behavior: auto; }
   .${UiClass.selectChevron} { transition: none; }
   .${UiClass.toast} { transition: none; }
+  .${UiClass.ribbonChevron} { transition: none; }
+  .${UiClass.tooltip} { transition: none; }
 }
-/* The fixed three-column grid degrades gracefully: first the editor folds under the preview, then the
-   controls drop below as the viewport narrows, so each pane keeps a usable width on small screens. */
-@media (max-width: 1100px) {
-  .${UiClass.grid} {
-    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.95fr);
-    grid-template-rows: minmax(220px, 0.9fr) minmax(0, 1.6fr);
-  }
-  .${UiClass.paneEditor} { grid-column: 1; grid-row: 1; }
-  .${UiClass.panePreview} { grid-column: 1; grid-row: 2; }
-  .${UiClass.paneControls} { grid-column: 2; grid-row: 1 / span 2; }
-}
+/* On narrow viewports the 50/50 editor|preview split stacks vertically, the ribbon band grows to keep
+   wrapped controls usable, and the toolbar wraps with the brand on its own line. The tab strip itself
+   needs no breakpoint — it scrolls horizontally at every width and the active tab is kept in view. */
 @media (max-width: 720px) {
   .${UiClass.grid} {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(180px, auto) minmax(280px, 1fr) minmax(200px, auto);
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(220px, 1fr) minmax(220px, 1.4fr);
   }
-  .${UiClass.paneEditor} { grid-column: 1; grid-row: 1; }
-  .${UiClass.panePreview} { grid-column: 1; grid-row: 2; }
-  .${UiClass.paneControls} { grid-column: 1; grid-row: 3; }
+  .${UiClass.paneEditor} { grid-row: 1; }
+  .${UiClass.panePreview} { grid-row: 2; }
+  .${UiClass.ribbonBand} { max-height: clamp(140px, 28vh, 220px); }
   .${UiClass.toolbar} { flex-wrap: wrap; gap: ${s.sm} ${s.md}; }
   .${UiClass.brand} { margin-right: 0; flex: 1 0 100%; }
+}
+@media (max-width: 560px) {
+  .${UiClass.ribbonTabs} { flex-wrap: wrap; }
+  .${UiClass.ribbonSearch} { order: -1; flex: 1 0 100%; }
+  .${UiClass.ribbonSearch} .${UiClass.search} { width: 100%; }
+}
+/* On a short laptop the band must never grow to eat the editor/preview split, so cap it harder. */
+@media (max-height: 640px) {
+  .${UiClass.ribbonBand} { max-height: 30vh; }
 }
 `;

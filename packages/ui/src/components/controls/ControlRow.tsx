@@ -1,9 +1,11 @@
 "use client";
 
 import { type ControlDef, controlLabel, type Locale, type ThemeValue } from "@md-pdf-studio/core";
-import { memo } from "react";
+import { memo, useId } from "react";
 import { UiClass } from "../../theme/chrome";
 import { ControlField } from "./ControlField";
+import { controlHint } from "./controlHint";
+import { Tooltip } from "./Tooltip";
 
 interface ControlRowProps {
   id: string;
@@ -11,6 +13,9 @@ interface ControlRowProps {
   locale: Locale;
   value: ThemeValue;
   onChange: (id: string, value: ThemeValue) => void;
+  // Presentation-only: switches the row to the tight Word-ribbon inline layout. Never selects a widget
+  // or alters a value, so the control still renders purely from its schema def.
+  compact?: boolean;
 }
 
 // Memoized so editing one control re-renders only its row, not the whole panel of controls.
@@ -20,32 +25,46 @@ export const ControlRow = memo(function ControlRow({
   locale,
   value,
   onChange,
+  compact = false,
 }: ControlRowProps) {
   const label = controlLabel(id, control.label, locale);
   const inputId = `ctl-${id}`;
+  const tipId = useId();
+  const hint = controlHint(control, id, label, locale);
   // Only numeric rows expose multiple trailing flex children, so the reserved-slot alignment fix is
   // scoped to them; the stepper's −/input/+ trio benefits from the same right-edge slot, while
   // color/select/segmented/toggle keep the bare field class and stay visually unchanged.
   const isNumeric =
     control.control === "slider" || control.control === "number" || control.control === "stepper";
   return (
-    <div className={UiClass.row}>
-      <label className={UiClass.rowLabel} htmlFor={inputId}>
-        {label}
-      </label>
-      <div
-        className={isNumeric ? `${UiClass.rowField} ${UiClass.rowFieldNumeric}` : UiClass.rowField}
-      >
-        <ControlField
-          control={control}
-          controlId={id}
-          locale={locale}
-          inputId={inputId}
-          label={label}
-          value={value}
-          onChange={(next) => onChange(id, next)}
-        />
-      </div>
-    </div>
+    <Tooltip content={hint} tipId={tipId}>
+      {(trigger) => (
+        <div
+          className={compact ? `${UiClass.row} ${UiClass.rowCompact}` : UiClass.row}
+          {...trigger}
+        >
+          {/* title is a native belt-and-suspenders fallback for the compact label, which can ellipsis. */}
+          <label className={UiClass.rowLabel} htmlFor={inputId} title={label}>
+            {label}
+          </label>
+          <div
+            className={
+              isNumeric ? `${UiClass.rowField} ${UiClass.rowFieldNumeric}` : UiClass.rowField
+            }
+          >
+            <ControlField
+              control={control}
+              controlId={id}
+              locale={locale}
+              inputId={inputId}
+              label={label}
+              value={value}
+              describedBy={tipId}
+              onChange={(next) => onChange(id, next)}
+            />
+          </div>
+        </div>
+      )}
+    </Tooltip>
   );
 });
