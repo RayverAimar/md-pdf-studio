@@ -1,13 +1,14 @@
 "use client";
 
 import { type ControlDef, FontStack, type Locale, optionLabel } from "@md-pdf-studio/core";
-import { UiClass } from "../../theme/chrome";
+import { Dropdown } from "./Dropdown";
 
 interface SelectControlProps {
   control: ControlDef;
   controlId: string;
   locale: Locale;
   inputId: string;
+  label: string;
   value: string | number;
   onChange: (value: string | number) => void;
 }
@@ -46,27 +47,25 @@ export function SelectControl({
   controlId,
   locale,
   inputId,
+  label,
   value,
   onChange,
 }: SelectControlProps) {
   const options = optionsFor(control, controlId, locale);
+  // Resolving key back to its typed schema value stays here, keeping the no-free-CSS guarantee local to
+  // the schema widget; the Dropdown itself is value-agnostic (string keys only).
   const emit = (key: string): void => {
     const match = options.find((option) => option.key === key);
     if (match !== undefined) onChange(match.value);
   };
 
   return (
-    <select
+    <Dropdown
       id={inputId}
-      className={UiClass.select}
+      label={label}
+      options={options.map(({ key, label: optLabel }) => ({ key, label: optLabel }))}
       value={String(value)}
-      onChange={(event) => emit(event.target.value)}
-    >
-      {options.map((option) => (
-        <option key={option.key} value={option.key}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+      onChange={emit}
+    />
   );
 }
