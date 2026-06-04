@@ -15,6 +15,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "fonts:embed": "node scripts/embed-fonts.mjs",
+    "icons:gen": "node scripts/gen-icons.mjs",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test"
   },

@@ -10,6 +10,7 @@ import { toast } from "../store/toastStore";
 import { UiClass } from "../theme/chrome";
 import { DocumentMenu } from "./DocumentMenu";
 import { LanguageSelector } from "./LanguageSelector";
+import { Logo } from "./Logo";
 import { PresetSelector } from "./PresetSelector";
 
 export function Toolbar() {
@@ -32,7 +33,7 @@ export function Toolbar() {
 
   return (
     <header className={UiClass.toolbar}>
-      <span className={UiClass.brand}>{message("appName", locale)}</span>
+      <Logo locale={locale} />
 
       <div className={UiClass.toolbarGroup}>
         <PresetSelector />

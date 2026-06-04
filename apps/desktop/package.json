@@ -11,6 +11,29 @@
     "typecheck": "tsc",
     "test:integration": "node esbuild.mjs integration/renderPort.integration.ts && electron dist/renderPort.integration.mjs"
   },
+  "build": {
+    "appId": "com.burhum.mdpdfstudio",
+    "productName": "md-pdf-studio",
+    "directories": {
+      "buildResources": "build",
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "build/icon.*"
+    ],
+    "mac": {
+      "icon": "build/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Office"
+    }
+  },
   "dependencies": {
     "@md-pdf-studio/core": "workspace:*",
     "@md-pdf-studio/render": "workspace:*",
