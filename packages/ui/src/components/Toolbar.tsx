@@ -8,6 +8,7 @@ import { useLocaleStore } from "../store/localeStore";
 import { useThemeStore } from "../store/themeStore";
 import { toast } from "../store/toastStore";
 import { UiClass } from "../theme/chrome";
+import { ColorSchemeToggle } from "./ColorSchemeToggle";
 import { DocumentMenu } from "./DocumentMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { Logo } from "./Logo";
@@ -50,6 +51,7 @@ export function Toolbar() {
       <DocumentMenu />
 
       <div className={UiClass.toolbarGroup}>
+        <ColorSchemeToggle />
         <LanguageSelector />
         <button
           type="button"

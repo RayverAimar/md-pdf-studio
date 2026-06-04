@@ -2,30 +2,67 @@
 // the document Palette in core. Components never hardcode a color or spacing; they reference these
 // class names, and every visual value resolves from the `Chrome` token object below.
 
+// Only colors differ between light and dark; radius/space/font are scheme-independent and stay flat so
+// they keep a single source of truth (duplicating them per scheme would invite drift). The two color
+// maps share IDENTICAL keys so the var emitter below can never reference a key that exists in only one.
+const lightColors = {
+  app: "#0b1220",
+  surface: "#ffffff",
+  surfaceMuted: "#f5f7fb",
+  surfaceSunken: "#eef1f7",
+  surfaceHover: "#eef1f7",
+  border: "#d8dee9",
+  borderStrong: "#9aa5b8",
+  text: "#1f2937",
+  textMuted: "#5b6675",
+  textFaint: "#737d8c",
+  accent: "#2563eb",
+  accentHover: "#1d4ed8",
+  accentText: "#ffffff",
+  focus: "#3b82f6",
+  danger: "#be123c",
+  success: "#15803d",
+  successSurface: "#ecfdf3",
+  info: "#1d4ed8",
+  infoSurface: "#eff6ff",
+  dangerSurface: "#fef2f2",
+  shadowColor: "rgba(15,23,42,0.14)",
+  shadowPop: "0 10px 30px rgba(15,23,42,0.18)",
+} as const;
+
+type ChromeColors = Record<keyof typeof lightColors, string>;
+
+// Tuned for WCAG AA on dark surfaces (ratios documented in the issue plan); accentText flips to
+// near-black because the dark accent fill is a light blue.
+const darkColors: ChromeColors = {
+  app: "#06080f",
+  surface: "#10151f",
+  surfaceMuted: "#161c28",
+  surfaceSunken: "#0b0f17",
+  surfaceHover: "#1b2230",
+  border: "#27303f",
+  borderStrong: "#5b6779",
+  text: "#e6eaf1",
+  textMuted: "#aab4c4",
+  textFaint: "#7c879a",
+  accent: "#3b82f6",
+  accentHover: "#60a5fa",
+  accentText: "#06080f",
+  focus: "#60a5fa",
+  danger: "#fb7185",
+  success: "#4ade80",
+  successSurface: "#0e2a1c",
+  info: "#93c5fd",
+  infoSurface: "#0e2030",
+  dangerSurface: "#2c1418",
+  shadowColor: "rgba(0,0,0,0.5)",
+  shadowPop: "0 12px 32px rgba(0,0,0,0.55)",
+} as const;
+
 const Chrome = {
-  color: {
-    app: "#0b1220",
-    surface: "#ffffff",
-    surfaceMuted: "#f5f7fb",
-    surfaceSunken: "#eef1f7",
-    border: "#d8dee9",
-    borderStrong: "#c2cad8",
-    text: "#1f2937",
-    textMuted: "#5b6675",
-    textFaint: "#8a93a3",
-    accent: "#2563eb",
-    accentHover: "#1d4ed8",
-    accentText: "#ffffff",
-    focus: "#3b82f6",
-    danger: "#be123c",
-    success: "#15803d",
-    successSurface: "#ecfdf3",
-    info: "#1d4ed8",
-    infoSurface: "#eff6ff",
-    dangerSurface: "#fef2f2",
-  },
-  radius: { sm: "6px", md: "9px", lg: "14px" },
-  space: { xs: "4px", sm: "8px", md: "12px", lg: "18px", xl: "28px" },
+  color: { light: lightColors, dark: darkColors },
+  radius: { sm: "7px", md: "10px", lg: "16px" },
+  space: { xs: "4px", sm: "8px", md: "12px", lg: "16px", xl: "24px" },
   font: {
     ui: "Inter, system-ui, -apple-system, sans-serif",
     mono: "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace",
@@ -72,6 +109,8 @@ export const UiClass = {
   segmented: "ui-segmented",
   segment: "ui-segment",
   segmentActive: "ui-segment-active",
+  colorSchemeToggle: "ui-color-scheme-toggle",
+  flag: "ui-flag",
   empty: "ui-empty",
   focusPulse: "ui-focus-pulse",
   srOnly: "ui-sr-only",
@@ -119,38 +158,47 @@ export const PREVIEW_FRAME = {
   styleId: PAGE_FRAME_STYLE_ID,
 } as const;
 
-const c = Chrome.color;
 const s = Chrome.space;
 const r = Chrome.radius;
 
-// Built once from the token object so a token change can never leave a stale literal behind.
+// One emitter for every color var so a token rename can never leave a stale literal; both schemes feed
+// the same function, guaranteeing the light and dark sets stay structurally identical.
+const emitColorVars = (cm: ChromeColors): string => `
+  --ui-app: ${cm.app};
+  --ui-surface: ${cm.surface};
+  --ui-surface-muted: ${cm.surfaceMuted};
+  --ui-surface-sunken: ${cm.surfaceSunken};
+  --ui-surface-hover: ${cm.surfaceHover};
+  --ui-border: ${cm.border};
+  --ui-border-strong: ${cm.borderStrong};
+  --ui-text: ${cm.text};
+  --ui-text-muted: ${cm.textMuted};
+  --ui-text-faint: ${cm.textFaint};
+  --ui-accent: ${cm.accent};
+  --ui-accent-hover: ${cm.accentHover};
+  --ui-accent-text: ${cm.accentText};
+  --ui-focus: ${cm.focus};
+  --ui-danger: ${cm.danger};
+  --ui-success: ${cm.success};
+  --ui-success-surface: ${cm.successSurface};
+  --ui-info: ${cm.info};
+  --ui-info-surface: ${cm.infoSurface};
+  --ui-danger-surface: ${cm.dangerSurface};
+  --ui-shadow-color: ${cm.shadowColor};
+  --ui-shadow-pop: ${cm.shadowPop};`;
+
+// Scheme-independent vars live in one place; only colors are re-declared under the dark scope.
+const STATIC_VARS = `--ui-radius-sm: ${r.sm}; --ui-radius-md: ${r.md}; --ui-radius-lg: ${r.lg}; --ui-radius-full: 999px; --ui-font-ui: ${Chrome.font.ui}; --ui-font-mono: ${Chrome.font.mono};`;
+
+// Built once from the token object so a token change can never leave a stale literal behind. Light is
+// the :root default (so the server render and the pre-toggle paint use it); dark re-declares ONLY the
+// color vars under the shell attribute selector. An attribute, not @media, because the user's explicit
+// persisted choice must always win — the OS preference is consulted only for the unset default.
 export const CHROME_CSS = `
-:root {
-  --ui-app: ${c.app};
-  --ui-surface: ${c.surface};
-  --ui-surface-muted: ${c.surfaceMuted};
-  --ui-surface-sunken: ${c.surfaceSunken};
-  --ui-border: ${c.border};
-  --ui-border-strong: ${c.borderStrong};
-  --ui-text: ${c.text};
-  --ui-text-muted: ${c.textMuted};
-  --ui-text-faint: ${c.textFaint};
-  --ui-accent: ${c.accent};
-  --ui-accent-hover: ${c.accentHover};
-  --ui-accent-text: ${c.accentText};
-  --ui-focus: ${c.focus};
-  --ui-danger: ${c.danger};
-  --ui-success: ${c.success};
-  --ui-success-surface: ${c.successSurface};
-  --ui-info: ${c.info};
-  --ui-info-surface: ${c.infoSurface};
-  --ui-danger-surface: ${c.dangerSurface};
-  --ui-radius-sm: ${r.sm};
-  --ui-radius-md: ${r.md};
-  --ui-radius-lg: ${r.lg};
-  --ui-font-ui: ${Chrome.font.ui};
-  --ui-font-mono: ${Chrome.font.mono};
-}
+:root { ${STATIC_VARS}${emitColorVars(Chrome.color.light)} }
+/* Dark scope: scoped to the shell so nothing outside the editor changes and the preview iframe — a
+   separate document with its own CSSOM — can never see these vars. */
+.${UiClass.shell}[data-ui-theme="dark"] { ${emitColorVars(Chrome.color.dark)} }
 .${UiClass.shell} {
   position: fixed;
   inset: 0;
@@ -176,7 +224,7 @@ export const CHROME_CSS = `
   display: inline-flex;
   align-items: center;
   gap: ${s.sm};
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.01em;
   margin-right: auto;
   font-size: 15px;
@@ -240,7 +288,7 @@ export const CHROME_CSS = `
   cursor: pointer;
   text-align: left;
 }
-.${UiClass.sectionHead}:hover { background: var(--ui-surface-muted); }
+.${UiClass.sectionHead}:hover { background: var(--ui-surface-hover); }
 .${UiClass.sectionChevron} { color: var(--ui-text-faint); transition: transform 0.15s ease; }
 .${UiClass.sectionBody} { padding: 0 ${s.md} ${s.md}; display: grid; gap: ${s.md}; }
 .${UiClass.row} { display: grid; grid-template-columns: 1fr; gap: ${s.xs}; }
@@ -290,7 +338,7 @@ export const CHROME_CSS = `
   background: var(--ui-surface);
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius-md);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--ui-shadow-pop);
 }
 .${UiClass.btn} {
   display: inline-flex;
@@ -303,16 +351,16 @@ export const CHROME_CSS = `
   color: var(--ui-text);
   font: inherit;
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 500;
   cursor: pointer;
   min-height: 34px;
 }
-.${UiClass.btn}:hover { background: var(--ui-surface-muted); }
+.${UiClass.btn}:hover { background: var(--ui-surface-hover); }
 .${UiClass.btn}:disabled { opacity: 0.55; cursor: default; }
 .${UiClass.btnPrimary} { background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-accent-text); }
 .${UiClass.btnPrimary}:hover { background: var(--ui-accent-hover); }
 .${UiClass.btnGhost} { border-color: transparent; background: none; }
-.${UiClass.btnGhost}:hover { background: var(--ui-surface-muted); }
+.${UiClass.btnGhost}:hover { background: var(--ui-surface-hover); }
 .${UiClass.search} {
   width: 100%;
   padding: ${s.sm} ${s.md};
@@ -325,6 +373,9 @@ export const CHROME_CSS = `
 }
 .${UiClass.segmented} { display: inline-flex; border: 1px solid var(--ui-border-strong); border-radius: var(--ui-radius-sm); overflow: hidden; }
 .${UiClass.segment} {
+  display: inline-flex;
+  align-items: center;
+  gap: ${s.xs};
   padding: ${s.xs} ${s.md};
   border: none;
   background: var(--ui-surface);
@@ -337,6 +388,14 @@ export const CHROME_CSS = `
 }
 .${UiClass.segment} + .${UiClass.segment} { border-left: 1px solid var(--ui-border-strong); }
 .${UiClass.segmentActive} { background: var(--ui-accent); color: var(--ui-accent-text); }
+/* The inset hairline keeps a white-heavy flag legible on both light and dark surfaces. */
+.${UiClass.flag} {
+  width: 18px;
+  height: 13px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ui-text) 14%, transparent);
+}
 .${UiClass.empty} { padding: ${s.lg}; color: var(--ui-text-faint); font-size: 13px; text-align: center; }
 .${UiClass.focusPulse} { animation: ui-pulse 1.1s ease; }
 @keyframes ui-pulse {
@@ -370,7 +429,7 @@ export const CHROME_CSS = `
   border-radius: var(--ui-radius-md);
   background: var(--ui-surface);
   color: var(--ui-text);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--ui-shadow-pop);
   font-size: 13px;
   transition: opacity 0.18s ease, transform 0.18s ease;
 }
@@ -398,13 +457,14 @@ export const CHROME_CSS = `
   border-radius: var(--ui-radius-lg);
   background: var(--ui-surface);
   color: var(--ui-text);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--ui-shadow-pop);
   font-family: var(--ui-font-ui);
   overflow: hidden;
 }
 /* ::backdrop does not inherit custom properties, so the scrim is a house-consistent literal from the
-   same rgba family as the elevation shadows above. */
+   same rgba family as the elevation shadows above. The dark scheme darkens it via one extra rule. */
 .${UiClass.modal}::backdrop { background: rgba(15, 23, 42, 0.45); }
+.${UiClass.shell}[data-ui-theme="dark"] .${UiClass.modal}::backdrop { background: rgba(0, 0, 0, 0.6); }
 .${UiClass.modalHead} {
   display: flex;
   align-items: center;
@@ -413,7 +473,7 @@ export const CHROME_CSS = `
   padding: ${s.md} ${s.lg};
   border-bottom: 1px solid var(--ui-border);
 }
-.${UiClass.modalTitle} { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+.${UiClass.modalTitle} { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
 .${UiClass.modalBody} {
   padding: ${s.lg};
   display: grid;

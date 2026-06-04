@@ -2,6 +2,7 @@
 
 import { resolveLocale } from "@md-pdf-studio/core";
 import { useEffect, useState } from "react";
+import { useColorSchemeStore } from "../store/colorSchemeStore";
 import { useDocumentStore } from "../store/documentStore";
 import { useLocaleStore } from "../store/localeStore";
 import { StorageKey } from "../store/persistence";
@@ -17,14 +18,21 @@ export function Studio() {
 
   useEffect(() => {
     const init = async (): Promise<void> => {
+      // Read the raw keys before rehydrate so an explicit stored value wins over the system default.
       const storedLocale = window.localStorage.getItem(StorageKey.locale);
+      const storedScheme = window.localStorage.getItem(StorageKey.colorScheme);
       await Promise.all([
         useDocumentStore.persist.rehydrate(),
         useThemeStore.persist.rehydrate(),
         useLocaleStore.persist.rehydrate(),
+        useColorSchemeStore.persist.rehydrate(),
       ]);
       if (storedLocale === null)
         useLocaleStore.getState().setLocale(resolveLocale(navigator.language));
+      if (storedScheme === null) {
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        useColorSchemeStore.getState().setScheme(prefersDark ? "dark" : "light");
+      }
       setHydrated(true);
     };
     void init();

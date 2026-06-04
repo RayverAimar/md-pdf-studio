@@ -5,6 +5,7 @@ export const StorageKey = {
   document: "mdp.document",
   theme: "mdp.theme",
   locale: "mdp.locale",
+  colorScheme: "mdp.colorScheme",
 } as const;
 
 // Stores initialize during module evaluation, which also happens on the server where localStorage is
