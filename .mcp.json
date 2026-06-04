@@ -3,6 +3,8 @@
     "git": {
       "command": "uvx",
       "args": [
+        "--from",
+        "mcp-server-git==2026.6.4",
         "mcp-server-git",
         "--repository",
         "/Users/rayver/md-pdf-studio"
@@ -12,7 +14,7 @@
       "type": "stdio",
       "command": "npx",
       "args": [
-        "@playwright/mcp@latest",
+        "@playwright/mcp@0.0.75",
         "--isolated"
       ],
       "env": {}
