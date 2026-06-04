@@ -37,6 +37,8 @@ export const UiClass = {
   shell: "ui-shell",
   toolbar: "ui-toolbar",
   brand: "ui-brand",
+  brandMark: "ui-brand-mark",
+  brandWordmark: "ui-brand-wordmark",
   toolbarGroup: "ui-toolbar-group",
   grid: "ui-grid",
   pane: "ui-pane",
@@ -171,11 +173,18 @@ export const CHROME_CSS = `
   flex: 0 0 auto;
 }
 .${UiClass.brand} {
+  display: inline-flex;
+  align-items: center;
+  gap: ${s.sm};
   font-weight: 650;
   letter-spacing: -0.01em;
   margin-right: auto;
   font-size: 15px;
 }
+/* The mark inherits the token via currentColor so the logo color stays single-sourced in Chrome.accent. */
+.${UiClass.brandMark} { color: var(--ui-accent); display: block; flex: 0 0 auto; }
+/* The hyphenated wordmark must never break across lines at its hyphens. */
+.${UiClass.brandWordmark} { color: var(--ui-text); white-space: nowrap; }
 .${UiClass.toolbarGroup} { display: flex; align-items: center; gap: ${s.sm}; }
 .${UiClass.grid} {
   flex: 1 1 auto;
@@ -442,6 +451,8 @@ export const CHROME_CSS = `
 @media (forced-colors: active) {
   .${UiClass.toast} { border: 1px solid CanvasText; }
   .${UiClass.modal} { border: 1px solid CanvasText; }
+  /* High Contrast flattens the accent fill, so keep the mark visible with a system color. */
+  .${UiClass.brandMark} { color: LinkText; }
   /* High Contrast flattens the accent fill, so cue the selected segment with the system Highlight pair. */
   .${UiClass.segmentActive} { background: Highlight; color: HighlightText; }
 }

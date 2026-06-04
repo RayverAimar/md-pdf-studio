@@ -29,6 +29,7 @@ export function resolveLocale(value: string | null | undefined): Locale {
 // current locale and passes it in.
 const Messages = {
   appName: { en: "md-pdf-studio", es: "md-pdf-studio" },
+  logoLabel: { en: "md-pdf-studio logo", es: "logo de md-pdf-studio" },
   exportPdf: { en: "Export PDF", es: "Exportar PDF" },
   generating: { en: "Generating…", es: "Generando…" },
   language: { en: "Language", es: "Idioma" },

@@ -37,6 +37,8 @@ function createWindow(): void {
   const win = new BrowserWindow({
     width: 1440,
     height: 900,
+    // macOS draws the window/Dock icon from the signed .app bundle; Windows/Linux dev windows need this explicit icon.
+    icon: `${import.meta.dirname}/../build/icon.png`,
     webPreferences: {
       preload: `${import.meta.dirname}/preload.mjs`,
       contextIsolation: true,
