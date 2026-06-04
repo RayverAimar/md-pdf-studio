@@ -82,6 +82,16 @@ export const UiClass = {
   toastSuccess: "ui-toast-success",
   toastError: "ui-toast-error",
   toastInfo: "ui-toast-info",
+  modal: "ui-modal",
+  modalHead: "ui-modal-head",
+  modalTitle: "ui-modal-title",
+  modalBody: "ui-modal-body",
+  modalSection: "ui-modal-section",
+  modalSectionLabel: "ui-modal-section-label",
+  modalActions: "ui-modal-actions",
+  modalClose: "ui-modal-close",
+  modalTextarea: "ui-modal-textarea",
+  modalError: "ui-modal-error",
 } as const;
 
 const PAGE_FRAME_STYLE_ID = "ui-page-frame-style";
@@ -371,7 +381,68 @@ export const CHROME_CSS = `
   padding: 0;
 }
 .${UiClass.toastDismiss}:hover { color: var(--ui-text); }
-@media (forced-colors: active) { .${UiClass.toast} { border: 1px solid CanvasText; } }
+.${UiClass.modal} {
+  width: min(640px, calc(100vw - ${s.xl}));
+  max-height: min(80vh, 720px);
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  font-family: var(--ui-font-ui);
+  overflow: hidden;
+}
+/* ::backdrop does not inherit custom properties, so the scrim is a house-consistent literal from the
+   same rgba family as the elevation shadows above. */
+.${UiClass.modal}::backdrop { background: rgba(15, 23, 42, 0.45); }
+.${UiClass.modalHead} {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${s.md};
+  padding: ${s.md} ${s.lg};
+  border-bottom: 1px solid var(--ui-border);
+}
+.${UiClass.modalTitle} { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+.${UiClass.modalBody} {
+  padding: ${s.lg};
+  display: grid;
+  gap: ${s.lg};
+  max-height: calc(80vh - 56px);
+  overflow: auto;
+}
+.${UiClass.modalSection} { display: grid; gap: ${s.sm}; }
+.${UiClass.modalSectionLabel} { font-size: 12px; font-weight: 600; color: var(--ui-text-muted); }
+.${UiClass.modalTextarea} {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  padding: ${s.sm} ${s.md};
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-sm);
+  font-family: var(--ui-font-mono);
+  font-size: 12.5px;
+  color: var(--ui-text);
+  background: var(--ui-surface-muted);
+}
+.${UiClass.modalError} { color: var(--ui-danger); font-size: 12px; margin: 0; }
+.${UiClass.modalActions} { display: flex; justify-content: flex-end; gap: ${s.sm}; }
+.${UiClass.modalClose} {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ui-text-faint);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+}
+.${UiClass.modalClose}:hover { color: var(--ui-text); }
+@media (forced-colors: active) {
+  .${UiClass.toast} { border: 1px solid CanvasText; }
+  .${UiClass.modal} { border: 1px solid CanvasText; }
+}
 @media (prefers-reduced-motion: reduce) {
   .${UiClass.focusPulse} { animation: none; }
   .${UiClass.sectionChevron} { transition: none; }
