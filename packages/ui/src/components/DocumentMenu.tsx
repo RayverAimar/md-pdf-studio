@@ -1,43 +1,43 @@
 "use client";
 
 import { message, slug } from "@md-pdf-studio/core";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { downloadBlob } from "../render/download";
 import { useDocumentStore } from "../store/documentStore";
 import { useLocaleStore } from "../store/localeStore";
 import { useThemeStore } from "../store/themeStore";
+import { toast } from "../store/toastStore";
 import { UiClass } from "../theme/chrome";
 
 const MARKDOWN_ACCEPT = ".md,.markdown,text/markdown";
 const THEME_ACCEPT = ".json,application/json";
 const THEME_FILE_SUFFIX = ".theme.json";
 const JSON_MIME = "application/json";
-const ERROR_DISMISS_MS = 4000;
 
 /** Toolbar group for document lifecycle: import Markdown, start fresh, and export/import the theme. */
 export function DocumentMenu() {
   const locale = useLocaleStore((state) => state.locale);
-  const [error, setError] = useState<string | null>(null);
   const markdownInputRef = useRef<HTMLInputElement>(null);
   const themeInputRef = useRef<HTMLInputElement>(null);
 
-  const flashError = (text: string): void => {
-    setError(text);
-    window.setTimeout(() => setError(null), ERROR_DISMISS_MS);
-  };
-
   const onMarkdownPicked = async (file: File): Promise<void> => {
-    const text = await file.text();
-    useDocumentStore.getState().loadMarkdown(text);
+    try {
+      const text = await file.text();
+      useDocumentStore.getState().loadMarkdown(text);
+      toast.success(message("markdownImported", locale));
+    } catch {
+      toast.error(message("markdownImportFailed", locale));
+    }
   };
 
   const onThemePicked = async (file: File): Promise<void> => {
     try {
       const parsed: unknown = JSON.parse(await file.text());
-      if (!useThemeStore.getState().importTheme(parsed))
-        flashError(message("importThemeFailed", locale));
+      if (useThemeStore.getState().importTheme(parsed))
+        toast.success(message("themeImported", locale));
+      else toast.error(message("importThemeFailed", locale));
     } catch {
-      flashError(message("importThemeFailed", locale));
+      toast.error(message("importThemeFailed", locale));
     }
   };
 
@@ -54,6 +54,7 @@ export function DocumentMenu() {
       `${slug(theme.name)}${THEME_FILE_SUFFIX}`,
       JSON_MIME,
     );
+    toast.success(message("themeExported", locale));
   };
 
   return (
@@ -86,12 +87,6 @@ export function DocumentMenu() {
       >
         {message("importTheme", locale)}
       </button>
-      {error !== null ? (
-        <span style={{ color: "var(--ui-danger)", fontSize: "12px" }} role="alert">
-          {error}
-        </span>
-      ) : null}
-
       <input
         ref={markdownInputRef}
         type="file"
