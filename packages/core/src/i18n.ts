@@ -76,6 +76,8 @@ const Messages = {
   tocTitleContents: { en: "Contents", es: "Contenido" },
   tocTitleIndex: { en: "Index", es: "Índice" },
   footerPage: { en: "Page", es: "Página" },
+  switchToDark: { en: "Switch to dark theme", es: "Cambiar a tema oscuro" },
+  switchToLight: { en: "Switch to light theme", es: "Cambiar a tema claro" },
 } satisfies Record<string, Localized>;
 
 export type MessageKey = keyof typeof Messages;
