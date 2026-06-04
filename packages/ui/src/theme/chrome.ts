@@ -137,17 +137,38 @@ export const UiClass = {
 
 const PAGE_FRAME_STYLE_ID = "ui-page-frame-style";
 
+const PREVIEW_BAND = "ui-page-band";
+const PREVIEW_BAND_HEADER = "ui-page-band-header";
+const PREVIEW_BAND_FOOTER = "ui-page-band-footer";
+
 // Chrome injected INSIDE the preview iframe to draw the simulated printed page: a centred sheet with
-// a drop shadow. The page width, margins and background are set as inline geometry from the page.*
-// theme values (see PreviewPane); the document itself stays styled solely by generateCss output.
+// a drop shadow. The page width, margins and background are set as inline geometry from the shared
+// pageGeometry (see PreviewPane); the document itself stays styled solely by generateCss output.
+//
+// The frame is positioned so the header/footer band strips can sit absolutely in the reserved margin
+// region the PDF leaves for them. The bands carry markup straight from buildPrintMeta, so they mirror
+// the PDF; this chrome only places and sizes the strip — it never restyles the band or the document.
 export const PREVIEW_FRAME_CSS = `
 html { background: transparent; }
 body { margin: 0; padding: 24px; display: flex; justify-content: center; }
 .${UiClass.pageFrame} {
   box-sizing: border-box;
+  position: relative;
   margin-inline: auto;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12), 0 12px 32px rgba(15, 23, 42, 0.14);
 }
+/* Reserved-strip placement only; the inner band div styles itself from buildPrintMeta's inline CSS. */
+.${PREVIEW_BAND} {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.${PREVIEW_BAND_HEADER} { top: 0; }
+.${PREVIEW_BAND_FOOTER} { bottom: 0; }
+.${PREVIEW_BAND} > div { width: 100%; }
 @media (forced-colors: active) {
   .${UiClass.pageFrame} { border: 1px solid CanvasText; }
 }
@@ -156,6 +177,9 @@ body { margin: 0; padding: 24px; display: flex; justify-content: center; }
 export const PREVIEW_FRAME = {
   className: UiClass.pageFrame,
   styleId: PAGE_FRAME_STYLE_ID,
+  band: PREVIEW_BAND,
+  bandHeader: PREVIEW_BAND_HEADER,
+  bandFooter: PREVIEW_BAND_FOOTER,
 } as const;
 
 const s = Chrome.space;

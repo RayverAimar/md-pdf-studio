@@ -13,9 +13,17 @@ export {
   type HeadingPages,
   type PreparedContent,
   prepareContent,
+  resolveTocOptions,
   type TocOptions,
 } from "./document";
 export { buildPrintMeta, type PrintMeta } from "./headerFooter";
+export {
+  type PageGeometry,
+  type PageSize,
+  pageGeometry,
+  pageWidthMm,
+  TEMPLATE_RESERVE_MM,
+} from "./pageGeometry";
 export { readHeadingPages } from "./readPages";
 export {
   type ReadHeadingPages,

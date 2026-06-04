@@ -1,14 +1,13 @@
+import { DEFAULT_LOCALE, type RenderInput } from "@md-pdf-studio/core";
 import {
-  DEFAULT_LOCALE,
-  type Locale,
-  message,
-  type RenderInput,
-  type ThemeValue,
-} from "@md-pdf-studio/core";
-import { buildDocument, buildTocHtml, type HeadingPages, prepareContent } from "./document";
+  buildDocument,
+  buildTocHtml,
+  type HeadingPages,
+  prepareContent,
+  resolveTocOptions,
+} from "./document";
 import { buildPrintMeta, type PrintMeta } from "./headerFooter";
 import { readHeadingPages } from "./readPages";
-import { num } from "./themeValue";
 
 /** Renders a complete HTML document to PDF bytes — the only piece each platform shell implements. */
 export type RenderHtmlToPdf = (html: string, meta: PrintMeta) => Promise<Uint8Array>;
@@ -27,25 +26,6 @@ export interface TwoPassOptions {
 }
 
 const DEFAULT_MAX_PASSES = 4;
-const DEFAULT_TOC_DEPTH = 3;
-
-const TocTitleChoice = {
-  contents: "contents",
-  index: "index",
-  none: "none",
-} as const;
-
-// The TOC title is display text, so it is resolved from the locale catalog rather than the schema.
-function resolveTocTitle(choice: ThemeValue | undefined, locale: Locale): string {
-  switch (choice) {
-    case TocTitleChoice.index:
-      return message("tocTitleIndex", locale);
-    case TocTitleChoice.none:
-      return "";
-    default:
-      return message("tocTitleContents", locale);
-  }
-}
 
 function pagesAreEqual(a: HeadingPages, b: HeadingPages): boolean {
   const keys = Object.keys(a);
@@ -69,13 +49,8 @@ export async function renderDocumentWithToc(
   const headingIds = headings.map((heading) => heading.id);
 
   const locale = input.options?.locale ?? DEFAULT_LOCALE;
-  const values = input.theme.values;
-  const tocEnabled = values["toc.enabled"] !== false;
-  const tocOptions = {
-    enabled: tocEnabled,
-    maxLevel: num(values["toc.depth"], DEFAULT_TOC_DEPTH),
-    title: resolveTocTitle(values["toc.title"], locale),
-  };
+  const tocOptions = resolveTocOptions(input.theme, locale);
+  const tocEnabled = tocOptions.enabled;
   const meta = buildPrintMeta(input.theme, locale);
 
   let pages: HeadingPages = {};
