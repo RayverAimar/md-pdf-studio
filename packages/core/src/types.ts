@@ -15,7 +15,15 @@ export type ControlType =
 // than emitting document CSS; generateCss skips them so they never reach the stylesheet.
 export type EmitterKind = "prop" | "page" | "multiRule" | "boolean" | "cssVar" | "meta";
 
-export type WidgetKind = "slider" | "number" | "color" | "select" | "radio" | "toggle";
+export type WidgetKind =
+  | "slider"
+  | "number"
+  | "color"
+  | "select"
+  | "radio"
+  | "toggle"
+  | "segmented"
+  | "stepper";
 
 export interface CssTarget {
   selector?: string;

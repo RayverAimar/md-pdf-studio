@@ -3,7 +3,9 @@
 import type { ControlDef, Locale, ThemeValue } from "@md-pdf-studio/core";
 import { ColorControl } from "./ColorControl";
 import { NumericControl } from "./NumericControl";
+import { SegmentedControl } from "./SegmentedControl";
 import { SelectControl } from "./SelectControl";
+import { StepperControl } from "./StepperControl";
 import { ToggleControl } from "./ToggleControl";
 
 interface ControlFieldProps {
@@ -39,6 +41,17 @@ export function ControlField({
           onChange={onChange}
         />
       );
+    case "stepper":
+      return (
+        <StepperControl
+          control={control}
+          inputId={inputId}
+          label={label}
+          locale={locale}
+          value={typeof value === "number" ? value : Number(control.default)}
+          onChange={onChange}
+        />
+      );
     case "color":
       return (
         <ColorControl
@@ -49,13 +62,26 @@ export function ControlField({
         />
       );
     case "select":
-    case "radio":
       return (
         <SelectControl
           control={control}
           controlId={controlId}
           locale={locale}
           inputId={inputId}
+          value={typeof value === "boolean" ? String(value) : value}
+          onChange={onChange}
+        />
+      );
+    // `radio` resolves to the same labelled toggle-button group as `segmented` — the better realization
+    // of a radio group for a few options (WAI-ARIA APG); schema opt-ins standardize on `segmented`.
+    case "radio":
+    case "segmented":
+      return (
+        <SegmentedControl
+          control={control}
+          controlId={controlId}
+          locale={locale}
+          label={label}
           value={typeof value === "boolean" ? String(value) : value}
           onChange={onChange}
         />

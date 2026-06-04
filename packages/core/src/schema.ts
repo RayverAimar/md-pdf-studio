@@ -281,7 +281,7 @@ const controls: Record<string, ControlDef> = {
   "body.textAlign": {
     type: "enum",
     emitter: "prop",
-    control: "select",
+    control: "segmented",
     default: "left",
     enum: ["left", "justify"],
     css: { selector: Selector.root, prop: "text-align" },
@@ -360,7 +360,7 @@ const controls: Record<string, ControlDef> = {
   "link.textDecoration": {
     type: "enum",
     emitter: "prop",
-    control: "select",
+    control: "segmented",
     default: "underline",
     enum: ["none", "underline"],
     css: { selector: Selector.link, prop: "text-decoration" },
@@ -406,7 +406,7 @@ const controls: Record<string, ControlDef> = {
   "em.fontStyle": {
     type: "enum",
     emitter: "prop",
-    control: "select",
+    control: "segmented",
     default: "italic",
     enum: ["italic", "normal"],
     css: { selector: Selector.emphasis, prop: "font-style" },
@@ -718,7 +718,7 @@ const controls: Record<string, ControlDef> = {
   "table.borderMode": {
     type: "enum",
     emitter: "multiRule",
-    control: "select",
+    control: "segmented",
     default: "horizontal",
     enum: ["all", "horizontal", "none"],
     rules: {
@@ -825,7 +825,7 @@ const controls: Record<string, ControlDef> = {
   "table.headerAlign": {
     type: "enum",
     emitter: "prop",
-    control: "select",
+    control: "segmented",
     default: "left",
     enum: ["left", "center", "right"],
     css: { selector: Selector.tableHeaderCell, prop: "text-align" },
@@ -835,7 +835,7 @@ const controls: Record<string, ControlDef> = {
   "table.cellAlign": {
     type: "enum",
     emitter: "prop",
-    control: "select",
+    control: "segmented",
     default: "left",
     enum: ["left", "center", "right"],
     css: { selector: Selector.tableBodyCell, prop: "text-align" },
@@ -880,7 +880,7 @@ const controls: Record<string, ControlDef> = {
   "blockquote.fontStyle": {
     type: "enum",
     emitter: "prop",
-    control: "select",
+    control: "segmented",
     default: "italic",
     enum: ["normal", "italic"],
     css: { selector: Selector.blockquote, prop: "font-style" },
@@ -1010,7 +1010,7 @@ const controls: Record<string, ControlDef> = {
   "taskList.checkboxStyle": {
     type: "enum",
     emitter: "multiRule",
-    control: "select",
+    control: "segmented",
     default: "accent",
     enum: ["accent", "square", "hidden"],
     rules: {
@@ -1092,7 +1092,7 @@ const controls: Record<string, ControlDef> = {
   "image.align": {
     type: "enum",
     emitter: "multiRule",
-    control: "select",
+    control: "segmented",
     default: "center",
     enum: ["left", "center", "right"],
     rules: {
@@ -1161,7 +1161,7 @@ const controls: Record<string, ControlDef> = {
   "caption.fontStyle": {
     type: "enum",
     emitter: "prop",
-    control: "select",
+    control: "segmented",
     default: "italic",
     enum: ["italic", "normal"],
     css: { selector: Selector.figcaption, prop: "font-style" },
@@ -1173,7 +1173,7 @@ const controls: Record<string, ControlDef> = {
   "footnote.separator": {
     type: "enum",
     emitter: "multiRule",
-    control: "select",
+    control: "segmented",
     default: "line",
     enum: ["line", "space", "none"],
     rules: {
@@ -1225,7 +1225,7 @@ const controls: Record<string, ControlDef> = {
   "toc.depth": {
     type: "number",
     emitter: "meta",
-    control: "slider",
+    control: "stepper",
     default: 3,
     min: 1,
     max: 6,
@@ -1236,7 +1236,7 @@ const controls: Record<string, ControlDef> = {
   "toc.title": {
     type: "enum",
     emitter: "meta",
-    control: "select",
+    control: "segmented",
     default: "contents",
     enum: ["contents", "index", "none"],
     section: Section.toc,
@@ -1284,7 +1284,7 @@ const controls: Record<string, ControlDef> = {
   "pagination.widows": {
     type: "number",
     emitter: "prop",
-    control: "slider",
+    control: "stepper",
     default: 2,
     min: 1,
     max: 5,
@@ -1296,7 +1296,7 @@ const controls: Record<string, ControlDef> = {
   "pagination.orphans": {
     type: "number",
     emitter: "prop",
-    control: "slider",
+    control: "stepper",
     default: 2,
     min: 1,
     max: 5,

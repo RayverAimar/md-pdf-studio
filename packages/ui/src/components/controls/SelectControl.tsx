@@ -25,7 +25,7 @@ function fontStackLabel(stack: string): string {
   return first.replace(/['"]/g, "").trim();
 }
 
-function optionsFor(control: ControlDef, controlId: string, locale: Locale): Option[] {
+export function optionsFor(control: ControlDef, controlId: string, locale: Locale): Option[] {
   if (control.type === "fontFamily") {
     return Object.values(FontStack).map((stack) => ({
       key: stack,

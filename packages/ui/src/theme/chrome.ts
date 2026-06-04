@@ -442,6 +442,8 @@ export const CHROME_CSS = `
 @media (forced-colors: active) {
   .${UiClass.toast} { border: 1px solid CanvasText; }
   .${UiClass.modal} { border: 1px solid CanvasText; }
+  /* High Contrast flattens the accent fill, so cue the selected segment with the system Highlight pair. */
+  .${UiClass.segmentActive} { background: Highlight; color: HighlightText; }
 }
 @media (prefers-reduced-motion: reduce) {
   .${UiClass.focusPulse} { animation: none; }
