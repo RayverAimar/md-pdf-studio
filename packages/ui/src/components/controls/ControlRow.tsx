@@ -23,12 +23,17 @@ export const ControlRow = memo(function ControlRow({
 }: ControlRowProps) {
   const label = controlLabel(id, control.label, locale);
   const inputId = `ctl-${id}`;
+  // Only numeric rows expose multiple trailing flex children, so the reserved-slot alignment fix is
+  // scoped to them; color/select/toggle keep the bare field class and stay visually unchanged.
+  const isNumeric = control.control === "slider" || control.control === "number";
   return (
     <div className={UiClass.row}>
       <label className={UiClass.rowLabel} htmlFor={inputId}>
         {label}
       </label>
-      <div className={UiClass.rowField}>
+      <div
+        className={isNumeric ? `${UiClass.rowField} ${UiClass.rowFieldNumeric}` : UiClass.rowField}
+      >
         <ControlField
           control={control}
           controlId={id}

@@ -60,7 +60,11 @@ export function NumericControl({
         onChange={(event) => commit(event.target.value)}
         onBlur={() => setDraft(String(value))}
       />
-      {unit !== undefined ? <span className={UiClass.unit}>{unit}</span> : null}
+      {/* Always rendered so the reserved trailing slot keeps the number box's right edge constant; empty
+          for unit-less controls and hidden from assistive tech in that case. */}
+      <span className={UiClass.unit} aria-hidden={unit === undefined}>
+        {unit ?? ""}
+      </span>
     </>
   );
 }

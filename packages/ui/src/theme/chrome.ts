@@ -49,6 +49,7 @@ export const UiClass = {
   row: "ui-row",
   rowLabel: "ui-row-label",
   rowField: "ui-row-field",
+  rowFieldNumeric: "ui-row-field--numeric",
   slider: "ui-slider",
   number: "ui-number",
   unit: "ui-unit",
@@ -220,6 +221,10 @@ export const CHROME_CSS = `
   background: var(--ui-surface);
 }
 .${UiClass.unit} { font-size: 11px; color: var(--ui-text-faint); min-width: 22px; }
+/* Reserve a constant-width trailing slot after the number box so unit and unit-less numeric rows share
+   one right edge; scoped to the numeric modifier so color/select/toggle rows are untouched. */
+.${UiClass.rowFieldNumeric} .${UiClass.number} { flex: 0 0 auto; }
+.${UiClass.rowFieldNumeric} .${UiClass.unit} { flex: 0 0 auto; }
 .${UiClass.select}, .${UiClass.hexInput} {
   padding: ${s.xs} ${s.sm};
   border: 1px solid var(--ui-border-strong);
