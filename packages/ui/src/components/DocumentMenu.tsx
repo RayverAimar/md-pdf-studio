@@ -1,13 +1,14 @@
 "use client";
 
 import { message, slug } from "@md-pdf-studio/core";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { downloadBlob } from "../render/download";
 import { useDocumentStore } from "../store/documentStore";
 import { useLocaleStore } from "../store/localeStore";
 import { useThemeStore } from "../store/themeStore";
 import { toast } from "../store/toastStore";
 import { UiClass } from "../theme/chrome";
+import { ThemeJsonDialog } from "./ThemeJsonDialog";
 
 const MARKDOWN_ACCEPT = ".md,.markdown,text/markdown";
 const THEME_ACCEPT = ".json,application/json";
@@ -19,6 +20,7 @@ export function DocumentMenu() {
   const locale = useLocaleStore((state) => state.locale);
   const markdownInputRef = useRef<HTMLInputElement>(null);
   const themeInputRef = useRef<HTMLInputElement>(null);
+  const [jsonOpen, setJsonOpen] = useState(false);
 
   const onMarkdownPicked = async (file: File): Promise<void> => {
     try {
@@ -87,6 +89,13 @@ export function DocumentMenu() {
       >
         {message("importTheme", locale)}
       </button>
+      <button
+        type="button"
+        className={`${UiClass.btn} ${UiClass.btnGhost}`}
+        onClick={() => setJsonOpen(true)}
+      >
+        {message("themeJson", locale)}
+      </button>
       <input
         ref={markdownInputRef}
         type="file"
@@ -113,6 +122,7 @@ export function DocumentMenu() {
           if (file !== undefined) void onThemePicked(file);
         }}
       />
+      <ThemeJsonDialog open={jsonOpen} onClose={() => setJsonOpen(false)} locale={locale} />
     </div>
   );
 }
