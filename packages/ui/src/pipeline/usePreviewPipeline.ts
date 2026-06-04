@@ -1,6 +1,7 @@
 "use client";
 
 import type { Theme } from "@md-pdf-studio/core";
+import { extractHeadings, type Heading } from "@md-pdf-studio/render/document";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type PipelineInput, type PipelineOutput, runPipeline } from "./runPipeline";
 import { sanitizeForPreview } from "./sanitizeClient";
@@ -8,6 +9,7 @@ import { sanitizeForPreview } from "./sanitizeClient";
 export interface PreviewState {
   html: string;
   css: string;
+  headings: Heading[];
 }
 
 // Keystrokes coalesce within this window before a render runs, so fast typing produces one render.
@@ -27,13 +29,17 @@ function createWorker(): Worker | null {
  * always correct even where worker bundling is unavailable.
  */
 export function usePreviewPipeline(markdown: string, theme: Theme): PreviewState {
-  const [state, setState] = useState<PreviewState>({ html: "", css: "" });
+  const [state, setState] = useState<PreviewState>({ html: "", css: "", headings: [] });
   const workerRef = useRef<Worker | null>(null);
   const brokenRef = useRef(false);
   const latestInput = useRef<PipelineInput>({ markdown, theme });
 
   const apply = useCallback((output: PipelineOutput): void => {
-    setState({ html: sanitizeForPreview(output.rawHtml), css: output.css });
+    // Extract headings from the SANITIZED HTML, the same input the PDF's prepareContent uses, so the
+    // preview TOC entries match the PDF's. The raw markdown-it output decorates heading close tags,
+    // which only the sanitizer normalizes — hence extraction must run after sanitizeForPreview.
+    const html = sanitizeForPreview(output.rawHtml);
+    setState({ html, css: output.css, headings: extractHeadings(html) });
   }, []);
 
   useEffect(() => {

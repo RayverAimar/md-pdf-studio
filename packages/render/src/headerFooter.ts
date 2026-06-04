@@ -8,7 +8,8 @@ import {
   schema,
   type Theme,
 } from "@md-pdf-studio/core";
-import { bool, num, str } from "./themeValue";
+import { pageGeometry } from "./pageGeometry";
+import { num, str } from "./themeValue";
 
 /** Print primitives derived from the header/footer + page controls, mapped to each shell's API. */
 export interface PrintMeta {
@@ -36,9 +37,6 @@ const FooterContent = {
   pageTotal: "page-total",
   titlePage: "title-page",
 } as const;
-
-// Templates print outside the page body; the edge they sit on needs room or the body overlaps them.
-const TEMPLATE_RESERVE_MM = 12;
 
 // The template runs in an isolated Chromium context that cannot see the body <style>'s @font-face, so
 // the band's font would never resolve. Pull just the normal-weight Inter face out of the shared blob
@@ -150,8 +148,6 @@ export function buildPrintMeta(theme: Theme, locale: Locale = DEFAULT_LOCALE): P
   const rawColor = str(values["headerFooter.color"], "");
   const color = isHexColor(rawColor) ? rawColor : schemaString("headerFooter.color", "#64748b");
 
-  const headerShown = bool(values["header.show"], false);
-  const footerShown = bool(values["footer.show"], true);
   const headerContent = str(values["header.content"], HeaderContent.title);
   const footerContent = str(values["footer.content"], FooterContent.page);
 
@@ -159,25 +155,20 @@ export function buildPrintMeta(theme: Theme, locale: Locale = DEFAULT_LOCALE): P
   const date = escapeHtml(formatDate(locale));
   const pageWord = escapeHtml(message("footerPage", locale));
 
-  const headerBody = headerShown ? headerInner(headerContent, title, date) : "";
-  const footerBody = footerShown ? footerInner(footerContent, title, pageWord) : "";
-
-  const headerActive = headerBody !== "";
-  const footerActive = footerBody !== "";
-
-  const baseTop = num(values["page.marginTop"], schemaNumber("page.marginTop", 20));
-  const baseRight = num(values["page.marginRight"], schemaNumber("page.marginRight", 18));
-  const baseBottom = num(values["page.marginBottom"], schemaNumber("page.marginBottom", 20));
-  const baseLeft = num(values["page.marginLeft"], schemaNumber("page.marginLeft", 18));
+  // The band reserve and the active flags live in pageGeometry so the +12mm exists in exactly one
+  // place; the preview frame reads the same geometry and never re-derives the margins.
+  const geom = pageGeometry(theme, locale);
+  const headerBody = geom.headerActive ? headerInner(headerContent, title, date) : "";
+  const footerBody = geom.footerActive ? footerInner(footerContent, title, pageWord) : "";
 
   return {
     // Chromium requires this flag for either band; an empty template simply prints nothing.
-    displayHeaderFooter: headerActive || footerActive,
-    headerTemplate: headerActive ? band(headerBody, fontSize, color) : "<span></span>",
-    footerTemplate: footerActive ? band(footerBody, fontSize, color) : "<span></span>",
-    marginTopMm: headerActive ? baseTop + TEMPLATE_RESERVE_MM : baseTop,
-    marginRightMm: baseRight,
-    marginBottomMm: footerActive ? baseBottom + TEMPLATE_RESERVE_MM : baseBottom,
-    marginLeftMm: baseLeft,
+    displayHeaderFooter: geom.headerActive || geom.footerActive,
+    headerTemplate: geom.headerActive ? band(headerBody, fontSize, color) : "<span></span>",
+    footerTemplate: geom.footerActive ? band(footerBody, fontSize, color) : "<span></span>",
+    marginTopMm: geom.margin.topMm,
+    marginRightMm: geom.margin.rightMm,
+    marginBottomMm: geom.margin.bottomMm,
+    marginLeftMm: geom.margin.leftMm,
   };
 }

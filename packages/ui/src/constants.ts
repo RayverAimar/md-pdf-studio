@@ -1,11 +1,12 @@
 import { ElementKey, Section, type SectionId } from "@md-pdf-studio/core";
+import { pageWidthMm } from "@md-pdf-studio/render/pageGeometry";
 
-// Physical page widths in millimetres, keyed by the `page.size` enum. UI-only: the preview frame
-// simulates the printed page geometry; the document CSS stays driven by the shared generateCss output.
+// Physical page widths in millimetres, keyed by the `page.size` enum. Derived from the render
+// geometry module so the preview frame and the PDF can never disagree on the printed sheet width.
 export const PAGE_SIZE_MM: Readonly<Record<string, number>> = {
-  A4: 210,
-  Letter: 215.9,
-  Legal: 215.9,
+  A4: pageWidthMm("A4"),
+  Letter: pageWidthMm("Letter"),
+  Legal: pageWidthMm("Legal"),
 };
 
 export const DEFAULT_PAGE_SIZE = "A4";

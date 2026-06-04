@@ -3,10 +3,15 @@ import {
   CssClass,
   CssVar,
   composeDocumentCss,
+  DEFAULT_LOCALE,
+  type Locale,
+  message,
   renderMarkdown,
   sanitizeHtml,
   type Theme,
+  type ThemeValue,
 } from "@md-pdf-studio/core";
+import { num } from "./themeValue";
 
 /** A heading discovered in the rendered content, with the data a TOC entry needs. */
 export interface Heading {
@@ -62,6 +67,41 @@ export interface TocOptions {
   enabled?: boolean;
   /** Already-localized title; an empty string renders the TOC with no heading. */
   title?: string;
+}
+
+const DEFAULT_TOC_DEPTH = 3;
+
+const TocTitleChoice = {
+  index: "index",
+  none: "none",
+} as const;
+
+// The TOC title is display text, so it is resolved from the locale catalog rather than the schema.
+function resolveTocTitle(choice: ThemeValue | undefined, locale: Locale): string {
+  switch (choice) {
+    case TocTitleChoice.index:
+      return message("tocTitleIndex", locale);
+    case TocTitleChoice.none:
+      return "";
+    default:
+      return message("tocTitleContents", locale);
+  }
+}
+
+/**
+ * Resolve the TOC options from a theme: enabled flag, depth cap and localized title. Shared so the
+ * 2-pass PDF engine and the preview's TOC chrome build identical entries from the same theme values.
+ */
+export function resolveTocOptions(
+  theme: Theme,
+  locale: Locale = DEFAULT_LOCALE,
+): Required<TocOptions> {
+  const values = theme.values;
+  return {
+    enabled: values["toc.enabled"] !== false,
+    maxLevel: num(values["toc.depth"], DEFAULT_TOC_DEPTH),
+    title: resolveTocTitle(values["toc.title"], locale),
+  };
 }
 
 /** Build the visible table of contents. Entries whose page is unknown render without a number. */
