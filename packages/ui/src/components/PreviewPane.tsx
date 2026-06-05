@@ -21,6 +21,34 @@ function str(value: unknown, fallback: string): string {
   return typeof value === "string" ? value : fallback;
 }
 
+// CSS px per millimetre at the 96dpi the preview iframe renders its mm-sized sheet at.
+const MM_TO_PX = 96 / 25.4;
+
+// The exact per-heading page and total are resolved by the 2-pass PDF render the live preview never
+// runs. So the preview estimates them from layout: it divides each heading's offset (and the whole
+// content height) by one page's usable height. It is approximate — a manual page break shifts the real
+// pagination — but it turns the TOC's empty page column and the footer's "—" total into honest numbers.
+function fillEstimatedPageNumbers(doc: Document, usablePageHeightPx: number): void {
+  const root = doc.getElementById(ROOT_ID);
+  if (root === null) return;
+  const rootTop = root.getBoundingClientRect().top;
+  const total = Math.max(1, Math.ceil(root.scrollHeight / usablePageHeightPx));
+
+  for (const entry of root.querySelectorAll(`.${CssClass.tocEntry}`)) {
+    const id = (entry.getAttribute("href") ?? "").replace(/^#/, "");
+    const heading = id === "" ? null : doc.getElementById(id);
+    const pageSpan = entry.querySelector(`.${CssClass.tocPageNumber}`);
+    if (heading === null || pageSpan === null) continue;
+    const offset = heading.getBoundingClientRect().top - rootTop;
+    pageSpan.textContent = String(
+      Math.min(total, Math.max(1, Math.floor(offset / usablePageHeightPx) + 1)),
+    );
+  }
+
+  const totalSpan = doc.getElementById(FOOTER_BAND_ID)?.querySelector(".totalPages") ?? null;
+  if (totalSpan !== null) totalSpan.textContent = String(total);
+}
+
 // An isolated document so the generated stylesheet — which targets bare `.mdp-*` selectors and `@page`
 // — can never leak into the editor chrome, and matches what the PDF renderer assembles. The page frame
 // is editor chrome (a viewport simulation of @page) and carries its own style block, kept apart from
@@ -41,8 +69,8 @@ export function PreviewPane() {
   // Push the latest CSS and content into the live frame without reloading it, so scroll position holds.
   // The TOC nav is prepended to the body exactly as the PDF does (buildTocHtml output is the leading
   // content), so it is styled by composeDocumentCss's .mdp-toc-* rules — real document content, not
-  // chrome. Page numbers stay blank because resolving them needs the 2-pass PDF render the preview
-  // does not perform.
+  // chrome. A rAF defers the estimated page numbers until after this paint (and after the sibling
+  // geometry effect has set the footer band) so the layout it measures is the final one.
   useEffect(() => {
     const doc = frameRef.current?.contentDocument;
     if (!ready || doc === null || doc === undefined) return;
@@ -50,6 +78,13 @@ export function PreviewPane() {
     if (style !== null) style.textContent = css;
     const root = doc.getElementById(ROOT_ID);
     if (root !== null) root.innerHTML = previewTocHtml(theme, headings, locale) + html;
+    const geom = previewGeometry(theme, locale);
+    const usablePx = Math.max(
+      1,
+      (geom.heightMm - geom.margin.topMm - geom.margin.bottomMm) * MM_TO_PX,
+    );
+    const raf = requestAnimationFrame(() => fillEstimatedPageNumbers(doc, usablePx));
+    return () => cancelAnimationFrame(raf);
   }, [ready, html, css, headings, theme, locale]);
 
   // Frame the content with the SAME geometry the PDF uses: the shared pageGeometry returns the sheet's
@@ -94,7 +129,7 @@ export function PreviewPane() {
   }, [ready, theme, locale]);
 
   // Clicking an element jumps the rail to the section that styles it and records the element so the
-  // inspector can announce it (and, when Follow selection is on, move focus to its first control).
+  // inspector can announce the selection to assistive tech.
   useEffect(() => {
     const doc = frameRef.current?.contentDocument;
     if (!ready || doc === null || doc === undefined) return;
