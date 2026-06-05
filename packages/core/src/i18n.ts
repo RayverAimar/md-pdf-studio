@@ -288,11 +288,13 @@ const CONTROL_LABELS_ES: Record<string, string> = {
   "pagination.keepHeadings": "No cortar tras encabezados",
   "pagination.breakBeforeH1": "Salto de página antes de H1",
   "header.show": "Mostrar encabezado",
-  "header.content": "Contenido de encabezado",
-  "header.align": "Alineación de encabezado",
+  "header.left": "Encabezado · izquierda",
+  "header.center": "Encabezado · centro",
+  "header.right": "Encabezado · derecha",
   "footer.show": "Mostrar pie",
-  "footer.content": "Contenido de pie",
-  "footer.align": "Alineación de pie",
+  "footer.left": "Pie · izquierda",
+  "footer.center": "Pie · centro",
+  "footer.right": "Pie · derecha",
   "headerFooter.fontSize": "Tamaño de fuente",
   "headerFooter.color": "Color de texto",
 };
@@ -307,6 +309,15 @@ export function controlLabel(controlId: string, englishLabel: string, locale: Lo
 export function hasSpanishControlLabel(controlId: string): boolean {
   return controlId in CONTROL_LABELS_ES;
 }
+
+// The six header/footer slots share one token set, so they all point at this single option map.
+const HF_SLOT_OPTIONS: Record<string, Localized> = {
+  none: { en: "None", es: "Ninguno" },
+  title: { en: "Title", es: "Título" },
+  date: { en: "Date", es: "Fecha" },
+  page: { en: "Page number", es: "Número de página" },
+  "page-total": { en: "Page of total", es: "Página de total" },
+};
 
 // Display labels for the options of an enum control, keyed by `controlId` then by option value. Only
 // semantic enums whose tokens read as English words are listed; language-neutral tokens (A4, decimal,
@@ -370,28 +381,12 @@ const OPTION_LABELS: Record<string, Record<string, Localized>> = {
     square: { en: "Square", es: "Cuadrada" },
     hidden: { en: "Hidden", es: "Oculta" },
   },
-  "header.content": {
-    none: { en: "None", es: "Ninguno" },
-    title: { en: "Title", es: "Título" },
-    date: { en: "Date", es: "Fecha" },
-    "title-date": { en: "Title & date", es: "Título y fecha" },
-  },
-  "header.align": {
-    left: { en: "Left", es: "Izquierda" },
-    center: { en: "Center", es: "Centro" },
-    right: { en: "Right", es: "Derecha" },
-  },
-  "footer.align": {
-    left: { en: "Left", es: "Izquierda" },
-    center: { en: "Center", es: "Centro" },
-    right: { en: "Right", es: "Derecha" },
-  },
-  "footer.content": {
-    none: { en: "None", es: "Ninguno" },
-    page: { en: "Page number", es: "Número de página" },
-    "page-total": { en: "Page of total", es: "Página de total" },
-    "title-page": { en: "Title & page", es: "Título y página" },
-  },
+  "header.left": HF_SLOT_OPTIONS,
+  "header.center": HF_SLOT_OPTIONS,
+  "header.right": HF_SLOT_OPTIONS,
+  "footer.left": HF_SLOT_OPTIONS,
+  "footer.center": HF_SLOT_OPTIONS,
+  "footer.right": HF_SLOT_OPTIONS,
 };
 
 /**

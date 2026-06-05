@@ -5,9 +5,9 @@ import { buildTocHtml, type Heading, resolveTocOptions } from "@md-pdf-studio/re
 import { buildPrintMeta } from "@md-pdf-studio/render/headerFooter";
 import { type PageGeometry, pageGeometry } from "@md-pdf-studio/render/pageGeometry";
 
-// The PDF's band markup uses Chromium print tokens that only resolve inside the print context. In the
-// preview the sheet is page one, so the current page is honestly "1"; the total is unknowable from a
-// single continuous flow, so an em-dash signals "unresolved" rather than faking a count.
+// The PDF's band markup uses Chromium print tokens that only resolve inside the print context. The
+// preview seeds page one and an em-dash total; PreviewPane then overwrites the total with a layout-based
+// estimate once the content height is measurable, so the footer shows real numbers instead of "—".
 const PREVIEW_PAGE_NUMBER = "1";
 const PREVIEW_TOTAL_PAGES = "—";
 const PAGE_NUMBER_TOKEN = '<span class="pageNumber"></span>';
@@ -73,10 +73,10 @@ export function previewBands(theme: Theme, locale: Locale): PreviewBands {
 
 /**
  * Build the preview's leading TOC nav. It reuses buildTocHtml with an EMPTY page map and the same TOC
- * options the PDF engine resolves, so entries, depth, indent and localized title match. Page numbers
- * stay blank: resolving them needs the 2-pass PDF render (pdf.js named destinations), which the live
- * preview does not run. This nav is real document content styled by composeDocumentCss's .mdp-toc-*
- * rules, exactly like the PDF, so it is WYSIWYG-correct for everything except the unresolved number.
+ * options the PDF engine resolves, so entries, depth, indent and localized title match. The page column
+ * is left blank here and filled with a layout-based estimate by PreviewPane (the exact numbers need the
+ * 2-pass PDF render the live preview does not run). This nav is real document content styled by
+ * composeDocumentCss's .mdp-toc-* rules, exactly like the PDF, so it stays WYSIWYG-correct.
  */
 export function previewTocHtml(theme: Theme, headings: Heading[], locale: Locale): string {
   return buildTocHtml(headings, {}, resolveTocOptions(theme, locale));

@@ -12,9 +12,21 @@ describe("buildPrintMeta", () => {
     expect(meta.displayHeaderFooter).toBe(false);
   });
 
-  it("renders the page footer with the localized word and Chromium token", () => {
+  it("disables a band when all of its slots are none", () => {
     const meta = buildPrintMeta(
-      themeWith({ "footer.show": true, "footer.content": "page" }),
+      themeWith({
+        "footer.show": true,
+        "footer.left": "none",
+        "footer.center": "none",
+        "footer.right": "none",
+      }),
+    );
+    expect(meta.displayHeaderFooter).toBe(false);
+  });
+
+  it("renders a page-number slot with the localized word and Chromium token", () => {
+    const meta = buildPrintMeta(
+      themeWith({ "footer.show": true, "footer.center": "page" }),
       Locale.spanish,
     );
     expect(meta.displayHeaderFooter).toBe(true);
@@ -22,38 +34,36 @@ describe("buildPrintMeta", () => {
     expect(meta.footerTemplate).toContain('class="pageNumber"');
   });
 
-  it("renders page-total with both Chromium tokens", () => {
-    const meta = buildPrintMeta(themeWith({ "footer.show": true, "footer.content": "page-total" }));
+  it("renders a page-total slot with both Chromium tokens", () => {
+    const meta = buildPrintMeta(themeWith({ "footer.show": true, "footer.center": "page-total" }));
     expect(meta.footerTemplate).toContain('class="pageNumber"');
     expect(meta.footerTemplate).toContain('class="totalPages"');
   });
 
-  it("aligns the footer per footer.align (center by default, configurable to the edges)", () => {
-    const center = buildPrintMeta(themeWith({ "footer.show": true, "footer.content": "page" }));
-    expect(center.footerTemplate).toContain("justify-content: center");
-    const right = buildPrintMeta(
-      themeWith({ "footer.show": true, "footer.content": "page", "footer.align": "right" }),
-    );
-    expect(right.footerTemplate).toContain("justify-content: flex-end");
-  });
-
-  it("never injects a crafted align value into the inline style", () => {
+  it("lays the three slots out left / center / right via space-between", () => {
     const meta = buildPrintMeta(
-      themeWith({
-        "footer.show": true,
-        "footer.content": "page",
-        "footer.align": "center; position: fixed",
-      }),
+      themeWith({ "footer.show": true, "footer.left": "title", "footer.right": "page" }),
     );
-    expect(meta.footerTemplate).toContain("justify-content: flex-start");
-    expect(meta.footerTemplate).not.toContain("position: fixed");
+    expect(meta.footerTemplate).toContain("justify-content: space-between");
+    // left slot (title) and right slot (page) both present, center empty.
+    expect(meta.footerTemplate).toContain("My Report");
+    expect(meta.footerTemplate).toContain('class="pageNumber"');
   });
 
-  it("escapes the theme name used as the header title", () => {
+  it("prints nothing for a crafted or unrecognized slot value", () => {
+    const meta = buildPrintMeta(
+      themeWith({ "footer.show": true, "footer.center": '"><script>steal()</script>' }),
+    );
+    // The crafted token isn't one of the known shapes, so the slot renders empty — no injection.
+    expect(meta.footerTemplate).not.toContain("steal()");
+    expect(meta.footerTemplate).not.toContain("<script>");
+  });
+
+  it("escapes the theme name used as a title slot", () => {
     const theme: Theme = {
       schemaVersion: 2,
       name: "A & B <x>",
-      values: { "header.show": true, "header.content": "title" },
+      values: { "header.show": true, "header.left": "title" },
     };
     const meta = buildPrintMeta(theme);
     expect(meta.headerTemplate).toContain("A &amp; B &lt;x&gt;");
@@ -63,7 +73,7 @@ describe("buildPrintMeta", () => {
     const meta = buildPrintMeta(
       themeWith({
         "header.show": true,
-        "header.content": "title",
+        "header.left": "title",
         "footer.show": false,
         "page.marginTop": 20,
         "page.marginBottom": 20,
@@ -77,7 +87,7 @@ describe("buildPrintMeta", () => {
     const meta = buildPrintMeta(
       themeWith({
         "footer.show": true,
-        "footer.content": "page",
+        "footer.center": "page",
         "headerFooter.fontSize": 11,
         "headerFooter.color": "#123456",
       }),
@@ -91,7 +101,7 @@ describe("buildPrintMeta", () => {
     const meta = buildPrintMeta(
       themeWith({
         "footer.show": true,
-        "footer.content": "page",
+        "footer.center": "page",
         "headerFooter.color": malicious,
       }),
     );
@@ -105,18 +115,14 @@ describe("buildPrintMeta", () => {
   it("clamps the font size to the schema range", () => {
     const max = schema.controls["headerFooter.fontSize"]?.max ?? 14;
     const meta = buildPrintMeta(
-      themeWith({
-        "footer.show": true,
-        "footer.content": "page",
-        "headerFooter.fontSize": 999,
-      }),
+      themeWith({ "footer.show": true, "footer.center": "page", "headerFooter.fontSize": 999 }),
     );
     expect(meta.footerTemplate).toContain(`font-size: ${String(max)}pt`);
     expect(meta.footerTemplate).not.toContain("999pt");
   });
 
   it("inlines an @font-face for Inter so the band font resolves in the print context", () => {
-    const meta = buildPrintMeta(themeWith({ "footer.show": true, "footer.content": "page" }));
+    const meta = buildPrintMeta(themeWith({ "footer.show": true, "footer.center": "page" }));
     expect(meta.footerTemplate).toContain("@font-face");
     expect(meta.footerTemplate).toContain("font-family:'Inter'");
   });

@@ -14,7 +14,7 @@ describe("preview geometry parity", () => {
   it("the preview frame uses the exact shared pageGeometry", () => {
     const cases: Theme[] = [
       defaultPreset,
-      themeWith({ "header.show": true, "header.content": "title", "footer.show": false }),
+      themeWith({ "header.show": true, "header.left": "title", "footer.show": false }),
       themeWith({ "page.size": "Letter", "footer.show": true }),
     ];
     for (const theme of cases) {
@@ -55,7 +55,12 @@ describe("preview band chrome mirrors the PDF", () => {
 
   it("omits a band whose content is none", () => {
     const bands = previewBands(
-      themeWith({ "footer.show": true, "footer.content": "none" }),
+      themeWith({
+        "footer.show": true,
+        "footer.left": "none",
+        "footer.center": "none",
+        "footer.right": "none",
+      }),
       Locale.english,
     );
     expect(bands.footer).toBeNull();

@@ -4,5 +4,8 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "integration"]
+  "include": ["src", "integration"],
+  // The browser renderer entry (DOM + JSX) is transpiled by esbuild, not this node-typed project; its
+  // UI is type-checked where it lives, in packages/ui.
+  "exclude": ["src/renderer"]
 }

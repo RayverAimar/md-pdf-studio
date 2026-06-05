@@ -362,6 +362,13 @@ export const CHROME_CSS = `
   color: var(--ui-accent-text);
   border-color: var(--ui-accent);
 }
+/* When collapsed the dock is a thin seam, so the only affordance left is this handle — fill it with the
+   accent so "open the controls" reads at a glance instead of hiding as a faint outline at the edge. */
+.${UiClass.inspectorRail} .${UiClass.dockHandle} {
+  background: var(--ui-accent);
+  color: var(--ui-accent-text);
+  border-color: var(--ui-accent);
+}
 /* Left rail: a vertical section list grouped under category bands. No horizontal scroll — a vertical
    list scales to all 17 sections; only this list scrolls (the band headers ride along). */
 .${UiClass.rail} {

@@ -1,5 +1,5 @@
 import { DEFAULT_LOCALE, type Locale, type Theme } from "@md-pdf-studio/core";
-import { bool, num, schemaNumber, str } from "./themeValue";
+import { bool, num, schemaNumber, schemaString, str } from "./themeValue";
 
 /** The `page.size` enum, which is what `preferCSSPageSize` selects in the PDF. */
 export type PageSize = "A4" | "Letter" | "Legal";
@@ -26,14 +26,20 @@ const DEFAULT_PAGE_SIZE: PageSize = "A4";
 // +12mm can never be re-added independently in either path.
 export const TEMPLATE_RESERVE_MM = 12;
 
-// A band renders (and thus reserves margin) only for these recognized content values. Anything else —
-// "none", or an out-of-enum value from a crafted/legacy theme, since these are meta-emitter controls
-// that skip resolveValue — produces no band, exactly as headerInner/footerInner return "" for it.
-const HEADER_BAND_CONTENT: ReadonlySet<string> = new Set(["title", "date", "title-date"]);
-const FOOTER_BAND_CONTENT: ReadonlySet<string> = new Set(["page", "page-total", "title-page"]);
-
 function isPageSize(value: string): value is PageSize {
   return value === "A4" || value === "Letter" || value === "Legal";
+}
+
+// The tokens a slot can print; mirrors headerFooter's slotInner so "active" matches "renders something".
+const SLOT_CONTENT: ReadonlySet<string> = new Set(["title", "date", "page", "page-total"]);
+
+// A band renders (and reserves margin) only when at least one slot holds a printable token; "none" or a
+// crafted/legacy value reserves nothing, exactly as slotInner returns "" for it.
+function bandHasContent(values: Theme["values"], prefix: string): boolean {
+  return ["left", "center", "right"].some((pos) => {
+    const id = `${prefix}.${pos}`;
+    return SLOT_CONTENT.has(str(values[id], schemaString(id, "none")));
+  });
 }
 
 /** The printed sheet geometry both the PDF and the preview must frame the content column with. */
@@ -71,13 +77,8 @@ export function pageGeometry(theme: Theme, _locale: Locale = DEFAULT_LOCALE): Pa
   const baseBottom = num(values["page.marginBottom"], schemaNumber("page.marginBottom", 20));
   const baseLeft = num(values["page.marginLeft"], schemaNumber("page.marginLeft", 18));
 
-  const headerShown = bool(values["header.show"], false);
-  const footerShown = bool(values["footer.show"], true);
-  const headerContent = str(values["header.content"], "title");
-  const footerContent = str(values["footer.content"], "page");
-
-  const headerActive = headerShown && HEADER_BAND_CONTENT.has(headerContent);
-  const footerActive = footerShown && FOOTER_BAND_CONTENT.has(footerContent);
+  const headerActive = bool(values["header.show"], false) && bandHasContent(values, "header");
+  const footerActive = bool(values["footer.show"], true) && bandHasContent(values, "footer");
 
   const reserveTop = headerActive ? TEMPLATE_RESERVE_MM : 0;
   const reserveBottom = footerActive ? TEMPLATE_RESERVE_MM : 0;

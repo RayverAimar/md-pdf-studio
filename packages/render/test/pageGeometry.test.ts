@@ -13,7 +13,7 @@ const baseBottomDefault = schema.controls["page.marginBottom"]?.default as numbe
 describe("pageGeometry", () => {
   it("reserves the band on the top edge when a header is active", () => {
     const geom = pageGeometry(
-      themeWith({ "header.show": true, "header.content": "title", "page.marginTop": 20 }),
+      themeWith({ "header.show": true, "header.left": "title", "page.marginTop": 20 }),
     );
     expect(geom.headerActive).toBe(true);
     expect(geom.reserve.topMm).toBe(TEMPLATE_RESERVE_MM);
@@ -30,7 +30,13 @@ describe("pageGeometry", () => {
 
   it("reserves nothing when the band content is none", () => {
     const geom = pageGeometry(
-      themeWith({ "header.show": true, "header.content": "none", "page.marginTop": 20 }),
+      themeWith({
+        "header.show": true,
+        "header.left": "none",
+        "header.center": "none",
+        "header.right": "none",
+        "page.marginTop": 20,
+      }),
     );
     expect(geom.headerActive).toBe(false);
     expect(geom.reserve.topMm).toBe(0);
@@ -42,7 +48,7 @@ describe("pageGeometry", () => {
     // must reserve no margin — matching buildPrintMeta, whose body is empty for unrecognized content.
     const theme = themeWith({
       "footer.show": true,
-      "footer.content": "bogus",
+      "footer.center": "bogus",
       "page.marginBottom": 20,
     });
     const geom = pageGeometry(theme);
@@ -73,12 +79,12 @@ describe("pageGeometry / buildPrintMeta margin parity", () => {
     { name: "header off, footer off", values: { "header.show": false, "footer.show": false } },
     {
       name: "header on, footer off",
-      values: { "header.show": true, "header.content": "title", "footer.show": false },
+      values: { "header.show": true, "header.left": "title", "footer.show": false },
     },
     { name: "header off, footer on", values: { "header.show": false, "footer.show": true } },
     {
       name: "header on, footer on",
-      values: { "header.show": true, "header.content": "title-date", "footer.show": true },
+      values: { "header.show": true, "header.left": "title", "footer.show": true },
     },
   ];
 

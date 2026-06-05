@@ -1,9 +1,19 @@
 import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { type DesktopExportResult, pdfFileName, type RenderInput } from "@md-pdf-studio/core";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
-import { RENDER_CHANNEL } from "./ipc";
+// electron-updater is CommonJS; default-import then destructure so the interop is unambiguous under ESM.
+import electronUpdater from "electron-updater";
+import {
+  RENDER_CHANNEL,
+  UPDATE_DOWNLOAD_CHANNEL,
+  UPDATE_EVENT_CHANNEL,
+  UPDATE_INSTALL_CHANNEL,
+  type UpdateEvent,
+} from "./ipc";
 import { ElectronRenderPort } from "./renderPort";
 
+const { autoUpdater } = electronUpdater;
 const { MDPDF_WEB_URL } = process.env;
 
 // The ad-hoc-signed dev binary makes macOS prompt for the login-keychain password on every launch
@@ -29,7 +39,7 @@ ipcMain.handle(RENDER_CHANNEL, async (_event, input: RenderInput): Promise<Deskt
   return { ok: true, canceled: false, path: filePath };
 });
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1440,
     height: 900,
@@ -42,11 +52,49 @@ function createWindow(): void {
       sandbox: false,
     },
   });
-  void win.loadURL(MDPDF_WEB_URL ?? "http://localhost:3000");
+  // A packaged build serves the UI from its own bundled renderer (file://); dev loads the Next dev
+  // server for HMR. MDPDF_WEB_URL overrides both, e.g. to point a build at a hosted web app.
+  if (MDPDF_WEB_URL !== undefined) void win.loadURL(MDPDF_WEB_URL);
+  else if (app.isPackaged) void win.loadFile(join(import.meta.dirname, "renderer", "index.html"));
+  else void win.loadURL("http://localhost:3000");
+  return win;
+}
+
+// Drive auto-update through the renderer's in-app UpdateChecker: forward each electron-updater event to
+// the window, and download / install on the user's request (autoDownload off so the dialog can show
+// progress and let the user choose when to restart). Packaged-only; failures are non-fatal.
+function setupAutoUpdate(win: BrowserWindow): void {
+  autoUpdater.autoDownload = false;
+  const send = (event: UpdateEvent): void => {
+    if (!win.isDestroyed()) win.webContents.send(UPDATE_EVENT_CHANNEL, event);
+  };
+  autoUpdater.on("update-available", (info) =>
+    send({
+      kind: "available",
+      version: info.version,
+      notes: typeof info.releaseNotes === "string" ? info.releaseNotes : "",
+    }),
+  );
+  autoUpdater.on("download-progress", (p) =>
+    send({
+      kind: "progress",
+      percent: Math.round(p.percent),
+      transferredMb: p.transferred / 1_048_576,
+      totalMb: p.total / 1_048_576,
+    }),
+  );
+  autoUpdater.on("update-downloaded", (info) =>
+    send({ kind: "downloaded", version: info.version }),
+  );
+  autoUpdater.on("error", (err) => send({ kind: "error", message: err.message }));
+  ipcMain.handle(UPDATE_DOWNLOAD_CHANNEL, () => autoUpdater.downloadUpdate());
+  ipcMain.on(UPDATE_INSTALL_CHANNEL, () => autoUpdater.quitAndInstall());
+  void autoUpdater.checkForUpdates().catch(() => undefined);
 }
 
 void app.whenReady().then(() => {
-  createWindow();
+  const win = createWindow();
+  if (app.isPackaged) setupAutoUpdate(win);
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

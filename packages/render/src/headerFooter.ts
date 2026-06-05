@@ -23,20 +23,6 @@ export interface PrintMeta {
   marginLeftMm: number;
 }
 
-const HeaderContent = {
-  none: "none",
-  title: "title",
-  date: "date",
-  titleDate: "title-date",
-} as const;
-
-const FooterContent = {
-  none: "none",
-  page: "page",
-  pageTotal: "page-total",
-  titlePage: "title-page",
-} as const;
-
 // The template runs in an isolated Chromium context that cannot see the body <style>'s @font-face, so
 // the band's font would never resolve. Pull just the normal-weight Inter face out of the shared blob
 // and inline it; the band renders one weight, so the other faces would only bloat every page.
@@ -60,62 +46,50 @@ function formatDate(locale: Locale): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date());
 }
 
-// Map the align control to a flex keyword. An unknown value falls to flex-start, so no crafted theme
-// value can reach the inline style — the keyword set is closed here (the meta-control validation point).
-function justify(align: string): string {
-  return align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
+const PAGE_NUMBER = '<span class="pageNumber"></span>';
+const TOTAL_PAGES = '<span class="totalPages"></span>';
+
+// One slot's printed content for its chosen token. "none" — or any unrecognized value from a crafted or
+// legacy theme — prints nothing, so this switch is the meta-control validation point: a slot value can
+// never reach the band markup as anything but one of these fixed shapes (title/date are pre-escaped).
+function slotInner(token: string, title: string, date: string, pageWord: string): string {
+  switch (token) {
+    case "title":
+      return title;
+    case "date":
+      return date;
+    case "page":
+      return `${pageWord} ${PAGE_NUMBER}`;
+    case "page-total":
+      return `${PAGE_NUMBER} / ${TOTAL_PAGES}`;
+    default:
+      return "";
+  }
 }
 
-// A template element inherits nothing and renders at font-size:0; styling is fully inline. The Inter
-// face is inlined alongside so the band's font resolves inside the isolated print context. The two-span
-// contents (title+date, title+page) sit together at the aligned edge with a gap between them.
-function band(inner: string, fontSizePt: number, color: string, align: string): string {
+// A template element inherits nothing and renders at font-size:0; styling is fully inline. The Inter face
+// is inlined alongside so the band's font resolves in the isolated print context. The three slots sit at
+// the start / center / end via space-between, so an empty slot still anchors the others to their edge.
+function band(
+  left: string,
+  center: string,
+  right: string,
+  fontSizePt: number,
+  color: string,
+): string {
   const style = [
     "width: 100%",
     "box-sizing: border-box",
     "padding: 0 12mm",
     "display: flex",
-    `justify-content: ${justify(align)}`,
+    "justify-content: space-between",
     "align-items: center",
     "gap: 0.75em",
     `font-size: ${fontSizePt}pt`,
     `font-family: ${FontStack.sans}`,
     `color: ${color}`,
   ].join("; ");
-  return `<style>${INTER_FACE_CSS}</style><div style="${style}">${inner}</div>`;
-}
-
-function span(text: string): string {
-  return `<span>${text}</span>`;
-}
-
-const PAGE_NUMBER = '<span class="pageNumber"></span>';
-const TOTAL_PAGES = '<span class="totalPages"></span>';
-
-function headerInner(content: string, title: string, date: string): string {
-  switch (content) {
-    case HeaderContent.title:
-      return span(title);
-    case HeaderContent.date:
-      return span(date);
-    case HeaderContent.titleDate:
-      return span(title) + span(date);
-    default:
-      return "";
-  }
-}
-
-function footerInner(content: string, title: string, pageWord: string): string {
-  switch (content) {
-    case FooterContent.page:
-      return span(`${pageWord} ${PAGE_NUMBER}`);
-    case FooterContent.pageTotal:
-      return span(`${PAGE_NUMBER} / ${TOTAL_PAGES}`);
-    case FooterContent.titlePage:
-      return span(title) + span(`${pageWord} ${PAGE_NUMBER}`);
-    default:
-      return "";
-  }
+  return `<style>${INTER_FACE_CSS}</style><div style="${style}"><span>${left}</span><span>${center}</span><span>${right}</span></div>`;
 }
 
 /**
@@ -138,29 +112,38 @@ export function buildPrintMeta(theme: Theme, locale: Locale = DEFAULT_LOCALE): P
   const rawColor = str(values["headerFooter.color"], "");
   const color = isHexColor(rawColor) ? rawColor : schemaString("headerFooter.color", "#64748b");
 
-  const headerContent = str(values["header.content"], HeaderContent.title);
-  const footerContent = str(values["footer.content"], FooterContent.page);
-  const headerAlign = str(values["header.align"], schemaString("header.align", "left"));
-  const footerAlign = str(values["footer.align"], schemaString("footer.align", "center"));
-
   const title = escapeHtml(theme.name);
   const date = escapeHtml(formatDate(locale));
   const pageWord = escapeHtml(message("footerPage", locale));
 
+  // Resolve one slot to its printed content, falling back to the slot's schema default when unset.
+  const slotOf = (id: string, fallback: string): string =>
+    slotInner(str(values[id], schemaString(id, fallback)), title, date, pageWord);
+
   // The band reserve and the active flags live in pageGeometry so the +12mm exists in exactly one
   // place; the preview frame reads the same geometry and never re-derives the margins.
   const geom = pageGeometry(theme, locale);
-  const headerBody = geom.headerActive ? headerInner(headerContent, title, date) : "";
-  const footerBody = geom.footerActive ? footerInner(footerContent, title, pageWord) : "";
 
   return {
     // Chromium requires this flag for either band; an empty template simply prints nothing.
     displayHeaderFooter: geom.headerActive || geom.footerActive,
     headerTemplate: geom.headerActive
-      ? band(headerBody, fontSize, color, headerAlign)
+      ? band(
+          slotOf("header.left", "title"),
+          slotOf("header.center", "none"),
+          slotOf("header.right", "date"),
+          fontSize,
+          color,
+        )
       : "<span></span>",
     footerTemplate: geom.footerActive
-      ? band(footerBody, fontSize, color, footerAlign)
+      ? band(
+          slotOf("footer.left", "none"),
+          slotOf("footer.center", "page"),
+          slotOf("footer.right", "none"),
+          fontSize,
+          color,
+        )
       : "<span></span>",
     marginTopMm: geom.margin.topMm,
     marginRightMm: geom.margin.rightMm,
