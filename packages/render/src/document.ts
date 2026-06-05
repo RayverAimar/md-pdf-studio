@@ -32,7 +32,6 @@ export interface PreparedContent {
 const HEADING_PATTERN = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1>/g;
 const ID_ATTR_PATTERN = /\bid="([^"]+)"/;
 const TAG_PATTERN = /<[^>]+>/g;
-const DEFAULT_TOC_MAX_LEVEL = 3;
 
 function stripTags(html: string): string {
   return html.replace(TAG_PATTERN, "").trim();
@@ -111,7 +110,7 @@ export function buildTocHtml(
   options: TocOptions = {},
 ): string {
   if (options.enabled === false) return "";
-  const maxLevel = options.maxLevel ?? DEFAULT_TOC_MAX_LEVEL;
+  const maxLevel = options.maxLevel ?? DEFAULT_TOC_DEPTH;
   const visible = headings.filter((heading) => heading.level <= maxLevel);
   if (visible.length === 0) return "";
 

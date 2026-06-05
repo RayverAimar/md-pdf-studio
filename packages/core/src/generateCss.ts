@@ -12,7 +12,7 @@ import { schema } from "./schema";
 import type { ControlDef, Schema, Theme, ThemeValue } from "./types";
 
 /** Shared hex literal shape: `#rgb` or `#rrggbb`. The single definition the validated color uses. */
-export const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
 /** Whether a value is a hex color literal accepted by the color emitter. */
 export function isHexColor(value: string): boolean {

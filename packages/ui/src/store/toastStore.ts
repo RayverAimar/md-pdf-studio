@@ -26,7 +26,6 @@ interface ToastState {
   toasts: readonly Toast[];
   push: (input: ToastInput) => number;
   dismiss: (id: number) => void;
-  clear: () => void;
 }
 
 const MAX_STACK = 4;
@@ -71,10 +70,6 @@ export const useToastStore = create<ToastState>((set, get) => ({
   dismiss: (id) => {
     clearTimer(id);
     set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }));
-  },
-  clear: () => {
-    for (const id of [...timers.keys()]) clearTimer(id);
-    set({ toasts: [] });
   },
 }));
 
