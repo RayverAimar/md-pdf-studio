@@ -148,10 +148,11 @@ export function Dropdown({ id, label, options, value, onChange, describedBy }: D
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [open, close]);
 
-  // Keep the highlighted option in view as the keyboard moves it past the menu's scroll edge.
+  // Keep the highlighted option in view as the keyboard moves it past the menu's scroll edge; the
+  // activeIndex dependency is what makes this re-run on every Arrow/Home/End, not just on open.
   useLayoutEffect(() => {
-    if (open) activeRef.current?.scrollIntoView({ block: "nearest" });
-  }, [open]);
+    if (open && activeIndex >= 0) activeRef.current?.scrollIntoView({ block: "nearest" });
+  }, [open, activeIndex]);
 
   useEffect(() => () => clearTimeout(typeAheadTimer.current), []);
 
