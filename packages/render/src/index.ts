@@ -24,6 +24,7 @@ export {
   pageWidthMm,
   TEMPLATE_RESERVE_MM,
 } from "./pageGeometry";
+export { PRINT_OPTIONS, toRenderError } from "./port";
 export { readHeadingPages } from "./readPages";
 export {
   type ReadHeadingPages,

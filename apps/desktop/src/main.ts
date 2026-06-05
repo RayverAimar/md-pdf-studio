@@ -1,5 +1,5 @@
 import { writeFile } from "node:fs/promises";
-import { type DesktopExportResult, type RenderInput, slug } from "@md-pdf-studio/core";
+import { type DesktopExportResult, pdfFileName, type RenderInput } from "@md-pdf-studio/core";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { RENDER_CHANNEL } from "./ipc";
 import { ElectronRenderPort } from "./renderPort";
@@ -13,10 +13,6 @@ if (!app.isPackaged) app.commandLine.appendSwitch("password-store", "basic");
 
 const renderPort = new ElectronRenderPort();
 
-function suggestedFileName(name: string): string {
-  return `${slug(name)}.pdf`;
-}
-
 // Render in the main process, then let the OS save dialog place the file. A dismissed dialog is a
 // normal, non-error outcome the UI reports quietly.
 ipcMain.handle(RENDER_CHANNEL, async (_event, input: RenderInput): Promise<DesktopExportResult> => {
@@ -24,7 +20,7 @@ ipcMain.handle(RENDER_CHANNEL, async (_event, input: RenderInput): Promise<Deskt
   if (!result.ok) return { ok: false, message: result.error.message };
 
   const { canceled, filePath } = await dialog.showSaveDialog({
-    defaultPath: suggestedFileName(input.theme.name),
+    defaultPath: pdfFileName(input.theme.name),
     filters: [{ name: "PDF", extensions: ["pdf"] }],
   });
   if (canceled || filePath === undefined) return { ok: true, canceled: true };

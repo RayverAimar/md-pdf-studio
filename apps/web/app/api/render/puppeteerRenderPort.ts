@@ -1,11 +1,11 @@
 import type { RenderInput, RenderPort, RenderResult } from "@md-pdf-studio/core";
-import { type RenderHtmlToPdf, renderDocumentWithToc } from "@md-pdf-studio/render";
+import {
+  PRINT_OPTIONS,
+  type RenderHtmlToPdf,
+  renderDocumentWithToc,
+  toRenderError,
+} from "@md-pdf-studio/render";
 import puppeteer, { type Browser, type Page } from "puppeteer";
-
-const PRINT_OPTIONS = {
-  printBackground: true,
-  preferCSSPageSize: true,
-} as const;
 
 // pdf.js (used by the shared page reader) expects these DOM globals to exist. Node has none; we only
 // read named destinations, never rasterize, so empty shims that accept any constructor args suffice.
@@ -59,8 +59,7 @@ export class PuppeteerRenderPort implements RenderPort {
       const pdf = await renderDocumentWithToc(input, { renderHtmlToPdf: printerFor(page) });
       return { ok: true, pdf };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { ok: false, error: { kind: "unknown", message } };
+      return toRenderError(error);
     } finally {
       await page.close();
     }

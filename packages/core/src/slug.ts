@@ -10,3 +10,8 @@ export function slug(value: string): string {
       .replace(/^-+|-+$/g, "") || FALLBACK_SLUG
   );
 }
+
+/** The exported PDF's file name for a document title — the same in both shells. */
+export function pdfFileName(name: string): string {
+  return `${slug(name)}.pdf`;
+}

@@ -40,6 +40,6 @@ export { migrateTheme } from "./migrations";
 export { defaultPreset, defaultPresetId, isPresetId, PresetId, presets } from "./presets";
 export { ALLOWED_ATTR, ALLOWED_TAGS, sanitizeHtml } from "./sanitize";
 export { SCHEMA_VERSION, schema } from "./schema";
-export { slug } from "./slug";
+export { pdfFileName, slug } from "./slug";
 export { applyTransforms, extractHeadingIds } from "./transforms";
 export * from "./types";

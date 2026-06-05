@@ -5,11 +5,10 @@ import {
   isHexColor,
   type Locale,
   message,
-  schema,
   type Theme,
 } from "@md-pdf-studio/core";
 import { pageGeometry } from "./pageGeometry";
-import { num, str } from "./themeValue";
+import { num, schemaBound, schemaNumber, schemaString, str } from "./themeValue";
 
 /** Print primitives derived from the header/footer + page controls, mapped to each shell's API. */
 export interface PrintMeta {
@@ -47,23 +46,6 @@ const INTER_FACE_CSS = (FONT_FACE_CSS.match(
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
-}
-
-// Schema defaults are the single source of truth for these meta controls; reading them here keeps the
-// render layer from drifting from the values the editor shows.
-function schemaNumber(id: string, fallback: number): number {
-  const def = schema.controls[id]?.default;
-  return typeof def === "number" ? def : fallback;
-}
-
-function schemaString(id: string, fallback: string): string {
-  const def = schema.controls[id]?.default;
-  return typeof def === "string" ? def : fallback;
-}
-
-function schemaBound(id: string, edge: "min" | "max", fallback: number): number {
-  const value = schema.controls[id]?.[edge];
-  return typeof value === "number" ? value : fallback;
 }
 
 function escapeHtml(text: string): string {
