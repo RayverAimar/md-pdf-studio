@@ -3,13 +3,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { RenderInput, RenderPort, RenderResult } from "@md-pdf-studio/core";
-import { type RenderHtmlToPdf, renderDocumentWithToc } from "@md-pdf-studio/render";
+import {
+  PRINT_OPTIONS,
+  type RenderHtmlToPdf,
+  renderDocumentWithToc,
+  toRenderError,
+} from "@md-pdf-studio/render";
 import { BrowserWindow } from "electron";
-
-const PRINT_OPTIONS = {
-  printBackground: true,
-  preferCSSPageSize: true,
-} as const;
 
 const MM_PER_INCH = 25.4;
 
@@ -56,8 +56,7 @@ export class ElectronRenderPort implements RenderPort {
       });
       return { ok: true, pdf };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { ok: false, error: { kind: "unknown", message } };
+      return toRenderError(error);
     } finally {
       window.destroy();
       await rm(scratchDir, { recursive: true, force: true });

@@ -1,4 +1,10 @@
-import { ElementKey, Section, type SectionId } from "@md-pdf-studio/core";
+import {
+  ElementKey,
+  RailCategory,
+  type RailCategoryId,
+  Section,
+  type SectionId,
+} from "@md-pdf-studio/core";
 import { pageWidthMm } from "@md-pdf-studio/render/pageGeometry";
 
 // Physical page widths in millimetres, keyed by the `page.size` enum. Derived from the render
@@ -8,8 +14,6 @@ export const PAGE_SIZE_MM: Readonly<Record<string, number>> = {
   Letter: pageWidthMm("Letter"),
   Legal: pageWidthMm("Legal"),
 };
-
-export const DEFAULT_PAGE_SIZE = "A4";
 
 /** Order sections appear in the controls panel — page-level first, then content, then code, tables, quotes. */
 export const SECTION_ORDER: readonly SectionId[] = [
@@ -30,6 +34,36 @@ export const SECTION_ORDER: readonly SectionId[] = [
   Section.toc,
   Section.pagination,
   Section.headerFooter,
+];
+
+// Which rail category band each section sits under. A coarse index over the closed section set — the
+// rail's analogue of SECTION_ORDER — so a new control needs no change and a new section needs one line.
+export const SECTION_CATEGORY: Record<SectionId, RailCategoryId> = {
+  [Section.page]: RailCategory.pageDocument,
+  [Section.pagination]: RailCategory.pageDocument,
+  [Section.headerFooter]: RailCategory.pageDocument,
+  [Section.toc]: RailCategory.pageDocument,
+  [Section.footnotes]: RailCategory.pageDocument,
+  [Section.body]: RailCategory.text,
+  [Section.headings]: RailCategory.text,
+  [Section.links]: RailCategory.text,
+  [Section.emphasis]: RailCategory.text,
+  [Section.lists]: RailCategory.blocks,
+  [Section.blockquote]: RailCategory.blocks,
+  [Section.horizontalRule]: RailCategory.blocks,
+  [Section.images]: RailCategory.blocks,
+  [Section.codeInline]: RailCategory.codeTables,
+  [Section.codeBlock]: RailCategory.codeTables,
+  [Section.codeColors]: RailCategory.codeTables,
+  [Section.tables]: RailCategory.codeTables,
+};
+
+/** Order the rail's category bands appear in. */
+export const CATEGORY_ORDER: readonly RailCategoryId[] = [
+  RailCategory.pageDocument,
+  RailCategory.text,
+  RailCategory.blocks,
+  RailCategory.codeTables,
 ];
 
 // Clicking a rendered element should reveal the section that styles it. Elements without a dedicated

@@ -28,6 +28,27 @@ describe("buildPrintMeta", () => {
     expect(meta.footerTemplate).toContain('class="totalPages"');
   });
 
+  it("aligns the footer per footer.align (center by default, configurable to the edges)", () => {
+    const center = buildPrintMeta(themeWith({ "footer.show": true, "footer.content": "page" }));
+    expect(center.footerTemplate).toContain("justify-content: center");
+    const right = buildPrintMeta(
+      themeWith({ "footer.show": true, "footer.content": "page", "footer.align": "right" }),
+    );
+    expect(right.footerTemplate).toContain("justify-content: flex-end");
+  });
+
+  it("never injects a crafted align value into the inline style", () => {
+    const meta = buildPrintMeta(
+      themeWith({
+        "footer.show": true,
+        "footer.content": "page",
+        "footer.align": "center; position: fixed",
+      }),
+    );
+    expect(meta.footerTemplate).toContain("justify-content: flex-start");
+    expect(meta.footerTemplate).not.toContain("position: fixed");
+  });
+
   it("escapes the theme name used as the header title", () => {
     const theme: Theme = {
       schemaVersion: 2,

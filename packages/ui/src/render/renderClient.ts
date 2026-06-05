@@ -1,4 +1,4 @@
-import { type Locale, slug, type Theme } from "@md-pdf-studio/core";
+import { type Locale, pdfFileName, type Theme } from "@md-pdf-studio/core";
 import { desktopBridge } from "./bridge";
 import { downloadBlob } from "./download";
 
@@ -6,10 +6,6 @@ export type ExportOutcome = { ok: true } | { ok: false; message: string };
 
 const RENDER_ENDPOINT = "/api/render";
 const PDF_MIME = "application/pdf";
-
-function fileNameFor(theme: Theme): string {
-  return `${slug(theme.name)}.pdf`;
-}
 
 /**
  * Export the current document to PDF through whichever shell is hosting the UI: the Electron bridge
@@ -36,6 +32,6 @@ export async function exportPdf(
     const detail = await response.text().catch(() => "");
     return { ok: false, message: detail || `HTTP ${response.status}` };
   }
-  downloadBlob(await response.arrayBuffer(), fileNameFor(theme), PDF_MIME);
+  downloadBlob(await response.arrayBuffer(), pdfFileName(theme.name), PDF_MIME);
   return { ok: true };
 }

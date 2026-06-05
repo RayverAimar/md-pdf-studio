@@ -32,7 +32,7 @@ export function PreviewPane() {
   const markdown = useDocumentStore((state) => state.markdown);
   const theme = useThemeStore((state) => state.theme);
   const locale = useLocaleStore((state) => state.locale);
-  const focusSection = useUiStore((state) => state.focusSection);
+  const selectElement = useUiStore((state) => state.selectElement);
   const { html, css, headings } = usePreviewPipeline(markdown, theme);
 
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -56,10 +56,10 @@ export function PreviewPane() {
   // physical width and the effective margins (base page.margin* plus the header/footer band reserve),
   // so a content line wraps and positions identically in the preview and the PDF.
   //
-  // DEFERRED: this is a single continuous sheet (min-height:100%), not paginated. It does not fragment
+  // The preview is a single continuous sheet (min-height:100%), not paginated: it does not fragment
   // content into physical pages, repeat the band per page, or visually honor cross-page break controls
-  // (pagination.* still emit into composeDocumentCss and affect the PDF). True fragmentation needs a
-  // layout/measuring pass (content height vs geom.heightMm minus margins) — out of scope here.
+  // (pagination.* still emit into composeDocumentCss and affect the PDF). True fragmentation would need a
+  // layout/measuring pass (content height vs geom.heightMm minus margins).
   useEffect(() => {
     const doc = frameRef.current?.contentDocument;
     const page = doc?.getElementById(PAGE_ID);
@@ -93,7 +93,8 @@ export function PreviewPane() {
     }
   }, [ready, theme, locale]);
 
-  // Clicking an element jumps the controls panel to the section that styles it.
+  // Clicking an element jumps the rail to the section that styles it and records the element so the
+  // inspector can announce it (and, when Follow selection is on, move focus to its first control).
   useEffect(() => {
     const doc = frameRef.current?.contentDocument;
     if (!ready || doc === null || doc === undefined) return;
@@ -101,12 +102,13 @@ export function PreviewPane() {
       const target = event.target as Element | null;
       const owner = target?.closest(`[${ELEMENT_ATTRIBUTE}]`) ?? null;
       const key = owner?.getAttribute(ELEMENT_ATTRIBUTE) ?? null;
-      const section = key !== null && isElementKey(key) ? ELEMENT_TO_SECTION[key] : undefined;
-      if (section !== undefined) focusSection(section);
+      if (key === null || !isElementKey(key)) return;
+      const section = ELEMENT_TO_SECTION[key];
+      if (section !== undefined) selectElement(section, key);
     };
     doc.addEventListener("click", onClick);
     return () => doc.removeEventListener("click", onClick);
-  }, [ready, focusSection]);
+  }, [ready, selectElement]);
 
   return (
     <section

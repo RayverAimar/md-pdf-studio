@@ -77,10 +77,9 @@ export function matchTypeAhead(
 export function Dropdown({ id, label, options, value, onChange, describedBy }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [flip, setFlip] = useState({ up: false, alignRight: false });
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const listboxRef = useRef<HTMLUListElement>(null);
   const activeRef = useRef<HTMLLIElement>(null);
   const typeAhead = useRef("");
   const typeAheadTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -114,31 +113,31 @@ export function Dropdown({ id, label, options, value, onChange, describedBy }: D
     [options, onChange, close],
   );
 
-  // Flip the menu above/left of the trigger when it would otherwise spill past the viewport edge, so it
-  // stays fully visible inside the narrow, scrolling controls column. Same recipe as ColorControl, but
-  // the height is content-driven (a select menu's height varies) and the width can't exceed the trigger.
-  const recomputeFlip = useCallback((): void => {
+  // The menu is position:fixed (viewport coordinates) so the inspector's overflow:auto can't clip it the
+  // way an absolutely-positioned child would. Anchor it to the trigger, match the trigger width, and flip
+  // above when it would spill past the viewport bottom. Height is content-driven (a select menu varies),
+  // capped at MENU_MAX_HEIGHT_PX, so the flip test uses the same estimate the menu's max-height enforces.
+  const recomputePos = useCallback((): void => {
     const rect = triggerRef.current?.getBoundingClientRect();
     if (rect === undefined) return;
     const height = Math.min(options.length * ROW_PX + MENU_PAD_PX, MENU_MAX_HEIGHT_PX);
-    setFlip({
-      up: rect.bottom + height + EDGE_GAP > window.innerHeight,
-      alignRight: rect.left + rect.width + EDGE_GAP > window.innerWidth,
-    });
+    const up = rect.bottom + height + EDGE_GAP > window.innerHeight;
+    const top = up ? rect.top - height - EDGE_GAP : rect.bottom;
+    setPos({ top: Math.max(EDGE_GAP, top), left: rect.left, width: rect.width });
   }, [options.length]);
 
-  // The trigger moves as the controls column scrolls or the window resizes; keep the flip in step so the
-  // open menu can't drift past the viewport edge. Scroll is captured to catch the inner column.
+  // The trigger moves as the controls column scrolls or the window resizes; recompute so the fixed menu
+  // tracks it and can't drift past the viewport edge. Scroll is captured to catch the inner column.
   useEffect(() => {
     if (!open) return;
-    recomputeFlip();
-    window.addEventListener("scroll", recomputeFlip, true);
-    window.addEventListener("resize", recomputeFlip);
+    recomputePos();
+    window.addEventListener("scroll", recomputePos, true);
+    window.addEventListener("resize", recomputePos);
     return () => {
-      window.removeEventListener("scroll", recomputeFlip, true);
-      window.removeEventListener("resize", recomputeFlip);
+      window.removeEventListener("scroll", recomputePos, true);
+      window.removeEventListener("resize", recomputePos);
     };
-  }, [open, recomputeFlip]);
+  }, [open, recomputePos]);
 
   useEffect(() => {
     if (!open) return;
@@ -149,10 +148,11 @@ export function Dropdown({ id, label, options, value, onChange, describedBy }: D
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [open, close]);
 
-  // Keep the highlighted option in view as the keyboard moves it past the menu's scroll edge.
+  // Keep the highlighted option in view as the keyboard moves it past the menu's scroll edge; the
+  // activeIndex dependency is what makes this re-run on every Arrow/Home/End, not just on open.
   useLayoutEffect(() => {
-    if (open) activeRef.current?.scrollIntoView({ block: "nearest" });
-  }, [open]);
+    if (open && activeIndex >= 0) activeRef.current?.scrollIntoView({ block: "nearest" });
+  }, [open, activeIndex]);
 
   useEffect(() => () => clearTimeout(typeAheadTimer.current), []);
 
@@ -234,7 +234,7 @@ export function Dropdown({ id, label, options, value, onChange, describedBy }: D
         ref={triggerRef}
         id={id}
         type="button"
-        // A native <select> can't be themed for dark mode (issue #21); role=combobox layers the APG
+        // A native <select> can't be themed for dark mode; role=combobox layers the APG
         // listbox pattern onto a real button, keeping its focus-ring and forced-colors rendering.
         role="combobox"
         className={`${UiClass.select} ${UiClass.selectTrigger}`}
@@ -261,21 +261,15 @@ export function Dropdown({ id, label, options, value, onChange, describedBy }: D
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
         </svg>
       </button>
-      {open ? (
+      {open && pos !== null ? (
         <ul
-          ref={listboxRef}
           id={listboxId}
           // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: APG select-only combobox popup; role=listbox on a <ul> of role=option <li>s is the canonical pattern with no native equivalent.
           role="listbox"
           className={UiClass.selectMenu}
           aria-label={label}
           tabIndex={-1}
-          style={{
-            top: flip.up ? "auto" : "100%",
-            bottom: flip.up ? "100%" : "auto",
-            left: flip.alignRight ? "auto" : 0,
-            right: flip.alignRight ? 0 : "auto",
-          }}
+          style={{ top: pos.top, left: pos.left, width: pos.width }}
         >
           {options.map((option, index) => {
             const isActive = index === activeIndex;

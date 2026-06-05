@@ -22,36 +22,38 @@ const EDGE_GAP = 8;
 export function ColorControl({ inputId, label, value, onChange, describedBy }: ColorControlProps) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
-  const [flip, setFlip] = useState({ up: false, alignRight: false });
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const swatchRef = useRef<HTMLButtonElement>(null);
 
   // Keep the text field in sync when the value changes from elsewhere (preset switch, reset).
   useEffect(() => setDraft(value), [value]);
 
-  // Flip the popover above/left of the swatch when it would otherwise spill past the viewport edge,
-  // so the picker stays fully visible inside the narrow controls column.
-  const recomputeFlip = useCallback((): void => {
+  // The popover is position:fixed (viewport coordinates) so the inspector's overflow:auto can't clip
+  // it the way an absolutely-positioned child would. Compute its corner from the swatch rect, flipping
+  // above/left of the swatch when it would otherwise spill past the viewport edge, and clamp to the gap.
+  const recomputePos = useCallback((): void => {
     const rect = swatchRef.current?.getBoundingClientRect();
     if (rect === undefined) return;
-    setFlip({
-      up: rect.bottom + POPOVER_HEIGHT + EDGE_GAP > window.innerHeight,
-      alignRight: rect.left + POPOVER_WIDTH + EDGE_GAP > window.innerWidth,
-    });
+    const up = rect.bottom + POPOVER_HEIGHT + EDGE_GAP > window.innerHeight;
+    const alignRight = rect.left + POPOVER_WIDTH + EDGE_GAP > window.innerWidth;
+    const top = up ? rect.top - POPOVER_HEIGHT - EDGE_GAP : rect.bottom + EDGE_GAP;
+    const left = alignRight ? rect.right - POPOVER_WIDTH : rect.left;
+    setPos({ top: Math.max(EDGE_GAP, top), left: Math.max(EDGE_GAP, left) });
   }, []);
 
-  // The swatch moves as the controls column scrolls or the window resizes; keep the flip in step so
-  // the open popover can't drift past the viewport edge. Scroll is captured to catch the inner column.
+  // The swatch moves as the controls column scrolls or the window resizes; recompute so the fixed
+  // popover tracks it and can't drift past the viewport edge. Scroll is captured to catch the inner column.
   useEffect(() => {
     if (!open) return;
-    recomputeFlip();
-    window.addEventListener("scroll", recomputeFlip, true);
-    window.addEventListener("resize", recomputeFlip);
+    recomputePos();
+    window.addEventListener("scroll", recomputePos, true);
+    window.addEventListener("resize", recomputePos);
     return () => {
-      window.removeEventListener("scroll", recomputeFlip, true);
-      window.removeEventListener("resize", recomputeFlip);
+      window.removeEventListener("scroll", recomputePos, true);
+      window.removeEventListener("resize", recomputePos);
     };
-  }, [open, recomputeFlip]);
+  }, [open, recomputePos]);
 
   useEffect(() => {
     if (!open) return;
@@ -75,9 +77,10 @@ export function ColorControl({ inputId, label, value, onChange, describedBy }: C
   };
 
   return (
-    // position:relative stays inline since it anchors the flip-positioned popover; the flex/gap moved to
-    // a class so the compact ribbon skin can tighten the swatch+hex spacing without an inline override.
-    <div ref={containerRef} className={UiClass.colorField} style={{ position: "relative" }}>
+    // The popover is position:fixed, so no positioned ancestor is needed; the container only scopes the
+    // outside-pointerdown dismiss (it still contains the popover in the DOM). flex/gap live on the class
+    // so the compact skin can tighten the swatch+hex spacing without an inline override.
+    <div ref={containerRef} className={UiClass.colorField}>
       <button
         ref={swatchRef}
         type="button"
@@ -101,16 +104,8 @@ export function ColorControl({ inputId, label, value, onChange, describedBy }: C
           if (event.key === "Enter") commitDraft();
         }}
       />
-      {open ? (
-        <div
-          className={UiClass.swatchPop}
-          style={{
-            top: flip.up ? "auto" : "100%",
-            bottom: flip.up ? "100%" : "auto",
-            left: flip.alignRight ? "auto" : 0,
-            right: flip.alignRight ? 0 : "auto",
-          }}
-        >
+      {open && pos !== null ? (
+        <div className={UiClass.swatchPop} style={{ top: pos.top, left: pos.left }}>
           <HexColorPicker color={value} onChange={onChange} />
         </div>
       ) : null}

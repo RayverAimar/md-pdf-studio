@@ -5,11 +5,10 @@ import {
   isHexColor,
   type Locale,
   message,
-  schema,
   type Theme,
 } from "@md-pdf-studio/core";
 import { pageGeometry } from "./pageGeometry";
-import { num, str } from "./themeValue";
+import { num, schemaBound, schemaNumber, schemaString, str } from "./themeValue";
 
 /** Print primitives derived from the header/footer + page controls, mapped to each shell's API. */
 export interface PrintMeta {
@@ -49,23 +48,6 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-// Schema defaults are the single source of truth for these meta controls; reading them here keeps the
-// render layer from drifting from the values the editor shows.
-function schemaNumber(id: string, fallback: number): number {
-  const def = schema.controls[id]?.default;
-  return typeof def === "number" ? def : fallback;
-}
-
-function schemaString(id: string, fallback: string): string {
-  const def = schema.controls[id]?.default;
-  return typeof def === "string" ? def : fallback;
-}
-
-function schemaBound(id: string, edge: "min" | "max", fallback: number): number {
-  const value = schema.controls[id]?.[edge];
-  return typeof value === "number" ? value : fallback;
-}
-
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -78,16 +60,24 @@ function formatDate(locale: Locale): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date());
 }
 
+// Map the align control to a flex keyword. An unknown value falls to flex-start, so no crafted theme
+// value can reach the inline style — the keyword set is closed here (the meta-control validation point).
+function justify(align: string): string {
+  return align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
+}
+
 // A template element inherits nothing and renders at font-size:0; styling is fully inline. The Inter
-// face is inlined alongside so the band's font resolves inside the isolated print context.
-function band(inner: string, fontSizePt: number, color: string): string {
+// face is inlined alongside so the band's font resolves inside the isolated print context. The two-span
+// contents (title+date, title+page) sit together at the aligned edge with a gap between them.
+function band(inner: string, fontSizePt: number, color: string, align: string): string {
   const style = [
     "width: 100%",
     "box-sizing: border-box",
     "padding: 0 12mm",
     "display: flex",
-    "justify-content: space-between",
+    `justify-content: ${justify(align)}`,
     "align-items: center",
+    "gap: 0.75em",
     `font-size: ${fontSizePt}pt`,
     `font-family: ${FontStack.sans}`,
     `color: ${color}`,
@@ -150,6 +140,8 @@ export function buildPrintMeta(theme: Theme, locale: Locale = DEFAULT_LOCALE): P
 
   const headerContent = str(values["header.content"], HeaderContent.title);
   const footerContent = str(values["footer.content"], FooterContent.page);
+  const headerAlign = str(values["header.align"], schemaString("header.align", "left"));
+  const footerAlign = str(values["footer.align"], schemaString("footer.align", "center"));
 
   const title = escapeHtml(theme.name);
   const date = escapeHtml(formatDate(locale));
@@ -164,8 +156,12 @@ export function buildPrintMeta(theme: Theme, locale: Locale = DEFAULT_LOCALE): P
   return {
     // Chromium requires this flag for either band; an empty template simply prints nothing.
     displayHeaderFooter: geom.headerActive || geom.footerActive,
-    headerTemplate: geom.headerActive ? band(headerBody, fontSize, color) : "<span></span>",
-    footerTemplate: geom.footerActive ? band(footerBody, fontSize, color) : "<span></span>",
+    headerTemplate: geom.headerActive
+      ? band(headerBody, fontSize, color, headerAlign)
+      : "<span></span>",
+    footerTemplate: geom.footerActive
+      ? band(footerBody, fontSize, color, footerAlign)
+      : "<span></span>",
     marginTopMm: geom.margin.topMm,
     marginRightMm: geom.margin.rightMm,
     marginBottomMm: geom.margin.bottomMm,

@@ -1,5 +1,5 @@
-import { DEFAULT_LOCALE, type Locale, schema, type Theme } from "@md-pdf-studio/core";
-import { bool, num, str } from "./themeValue";
+import { DEFAULT_LOCALE, type Locale, type Theme } from "@md-pdf-studio/core";
+import { bool, num, schemaNumber, str } from "./themeValue";
 
 /** The `page.size` enum, which is what `preferCSSPageSize` selects in the PDF. */
 export type PageSize = "A4" | "Letter" | "Legal";
@@ -34,13 +34,6 @@ const FOOTER_BAND_CONTENT: ReadonlySet<string> = new Set(["page", "page-total", 
 
 function isPageSize(value: string): value is PageSize {
   return value === "A4" || value === "Letter" || value === "Legal";
-}
-
-// Schema defaults are the single source of truth for these controls; reading them here keeps the
-// geometry from drifting from the values the editor shows.
-function schemaNumber(id: string, fallback: number): number {
-  const def = schema.controls[id]?.default;
-  return typeof def === "number" ? def : fallback;
 }
 
 /** The printed sheet geometry both the PDF and the preview must frame the content column with. */
