@@ -1342,23 +1342,34 @@ const controls: Record<string, ControlDef> = {
     section: Section.headerFooter,
     label: "Show header",
   },
-  "header.content": {
+  // Each band has three independent slots (left / center / right); a slot picks one token, so the user
+  // composes exactly what prints where. "none" leaves the slot empty. The token set is shared by all six.
+  "header.left": {
     type: "enum",
     emitter: "meta",
     control: "select",
     default: "title",
-    enum: ["none", "title", "date", "title-date"],
+    enum: ["none", "title", "date", "page", "page-total"],
     section: Section.headerFooter,
-    label: "Header content",
+    label: "Header · left",
   },
-  "header.align": {
+  "header.center": {
     type: "enum",
     emitter: "meta",
-    control: "segmented",
-    default: "left",
-    enum: ["left", "center", "right"],
+    control: "select",
+    default: "none",
+    enum: ["none", "title", "date", "page", "page-total"],
     section: Section.headerFooter,
-    label: "Header align",
+    label: "Header · center",
+  },
+  "header.right": {
+    type: "enum",
+    emitter: "meta",
+    control: "select",
+    default: "date",
+    enum: ["none", "title", "date", "page", "page-total"],
+    section: Section.headerFooter,
+    label: "Header · right",
   },
   "footer.show": {
     type: "boolean",
@@ -1368,23 +1379,32 @@ const controls: Record<string, ControlDef> = {
     section: Section.headerFooter,
     label: "Show footer",
   },
-  "footer.content": {
+  "footer.left": {
+    type: "enum",
+    emitter: "meta",
+    control: "select",
+    default: "none",
+    enum: ["none", "title", "date", "page", "page-total"],
+    section: Section.headerFooter,
+    label: "Footer · left",
+  },
+  "footer.center": {
     type: "enum",
     emitter: "meta",
     control: "select",
     default: "page",
-    enum: ["none", "page", "page-total", "title-page"],
+    enum: ["none", "title", "date", "page", "page-total"],
     section: Section.headerFooter,
-    label: "Footer content",
+    label: "Footer · center",
   },
-  "footer.align": {
+  "footer.right": {
     type: "enum",
     emitter: "meta",
-    control: "segmented",
-    default: "center",
-    enum: ["left", "center", "right"],
+    control: "select",
+    default: "none",
+    enum: ["none", "title", "date", "page", "page-total"],
     section: Section.headerFooter,
-    label: "Footer align",
+    label: "Footer · right",
   },
   "headerFooter.fontSize": {
     type: "dimension",
