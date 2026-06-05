@@ -81,6 +81,7 @@ export const UiClass = {
   brandMark: "ui-brand-mark",
   brandWordmark: "ui-brand-wordmark",
   toolbarGroup: "ui-toolbar-group",
+  workspace: "ui-workspace",
   grid: "ui-grid",
   pane: "ui-pane",
   paneEditor: "ui-pane-editor",
@@ -89,21 +90,35 @@ export const UiClass = {
   paneBody: "ui-pane-body",
   previewFrame: "ui-preview-frame",
   editorHost: "ui-editor-host",
-  ribbon: "ui-ribbon",
-  ribbonTabs: "ui-ribbon-tabs",
-  tablist: "ui-tablist",
-  tab: "ui-tab",
-  tabActive: "ui-tab--active",
-  ribbonSearch: "ui-ribbon-search",
-  ribbonBand: "ui-ribbon-band",
-  ribbonGroup: "ui-ribbon-group",
-  ribbonGroupLabel: "ui-ribbon-group-label",
-  ribbonGroupBody: "ui-ribbon-group-body",
-  ribbonToggle: "ui-ribbon-toggle",
-  ribbonChevron: "ui-ribbon-chevron",
-  ctlGroup: "ui-ctl-group",
-  ctlGroupLabel: "ui-ctl-group-label",
-  ctlGroupBody: "ui-ctl-group-body",
+  inspectorDock: "ui-inspector-dock",
+  inspectorRail: "ui-inspector-collapsed",
+  dockClip: "ui-dock-clip",
+  rail: "ui-rail",
+  railHead: "ui-rail-head",
+  railList: "ui-rail-list",
+  railBand: "ui-rail-band",
+  railBandLabel: "ui-rail-band-label",
+  railTab: "ui-rail-tab",
+  railTabActive: "ui-rail-tab--active",
+  railTabText: "ui-rail-tab-text",
+  modifiedDot: "ui-modified-dot",
+  dockHandle: "ui-dock-handle",
+  scopeChips: "ui-scope-chips",
+  scopeChip: "ui-scope-chip",
+  scopeChipActive: "ui-scope-chip--active",
+  inspector: "ui-inspector",
+  inspectorHead: "ui-inspector-head",
+  inspectorTitle: "ui-inspector-title",
+  inspectorBody: "ui-inspector-body",
+  facetGroup: "ui-facet-group",
+  facetLabel: "ui-facet-label",
+  facetBody: "ui-facet-body",
+  levelGroup: "ui-level-group",
+  levelToggle: "ui-level-toggle",
+  levelChevron: "ui-level-chevron",
+  swatchGrid: "ui-swatch-grid",
+  swatchCell: "ui-swatch-cell",
+  swatchCellLabel: "ui-swatch-cell-label",
   tooltipWrap: "ui-tooltipWrap",
   tooltip: "ui-tooltip",
   row: "ui-row",
@@ -239,7 +254,7 @@ const emitColorVars = (cm: ChromeColors): string => `
   --ui-shadow-pop: ${cm.shadowPop};`;
 
 // Scheme-independent vars live in one place; only colors are re-declared under the dark scope.
-const STATIC_VARS = `--ui-radius-sm: ${r.sm}; --ui-radius-md: ${r.md}; --ui-radius-lg: ${r.lg}; --ui-radius-full: 999px; --ui-font-ui: ${Chrome.font.ui}; --ui-font-mono: ${Chrome.font.mono};`;
+const STATIC_VARS = `--ui-radius-sm: ${r.sm}; --ui-radius-md: ${r.md}; --ui-radius-lg: ${r.lg}; --ui-radius-full: 999px; --ui-font-ui: ${Chrome.font.ui}; --ui-font-mono: ${Chrome.font.mono}; --ui-rail-w: 210px; --ui-inspector-w: clamp(320px, 26vw, 400px);`;
 
 // Built once from the token object so a token change can never leave a stale literal behind. Light is
 // the :root default (so the server render and the pre-toggle paint use it); dark re-declares ONLY the
@@ -296,123 +311,203 @@ export const CHROME_CSS = `
 /* The hyphenated wordmark must never break across lines at its hyphens. */
 .${UiClass.brandWordmark} { color: var(--ui-text); white-space: nowrap; }
 .${UiClass.toolbarGroup} { display: flex; align-items: center; gap: ${s.sm}; }
-.${UiClass.ribbon} {
-  flex: 0 0 auto;
-  background: var(--ui-surface);
-  border-bottom: 1px solid var(--ui-border);
-}
-.${UiClass.ribbonTabs} {
-  display: flex;
-  align-items: center;
-  gap: ${s.sm};
-  padding: 0 ${s.lg};
-  border-bottom: 1px solid var(--ui-border);
-}
-.${UiClass.tablist} {
-  display: flex;
+/* The work area below the toolbar: a left controls dock (rail + inspector) beside the editor|preview
+   grid. The 1px gaps over the border background draw hairline column dividers (the grid's own recipe). */
+.${UiClass.workspace} {
   flex: 1 1 auto;
-  min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scroll-snap-type: x proximity;
+  display: flex;
+  min-height: 0;
+  background: var(--ui-border);
+  gap: 1px;
 }
-.${UiClass.tab} {
+/* position:relative anchors the edge handle (the inspector|editor divider toggle). */
+.${UiClass.inspectorDock} { position: relative; flex: 0 0 auto; display: flex; min-height: 0; }
+/* The clip holds the rail + inspector at their full widths and animates its OWN width to 0 on collapse,
+   so the panel slides shut without the contents reflowing; the handle lives outside it (in the dock) and
+   is never clipped. The combined width is the single source the rail/inspector widths also reference. */
+.${UiClass.dockClip} {
   flex: 0 0 auto;
-  white-space: nowrap;
-  scroll-snap-align: start;
-  padding: ${s.sm} ${s.md};
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--ui-text-muted);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+  display: flex;
+  min-height: 0;
+  width: calc(var(--ui-rail-w) + var(--ui-inspector-w));
+  overflow: hidden;
+  transition: width 0.24s ease;
 }
-.${UiClass.tab}:hover { color: var(--ui-text); background: var(--ui-surface-hover); }
-.${UiClass.tabActive} { color: var(--ui-accent); border-bottom-color: var(--ui-accent); }
-.${UiClass.ribbonSearch} { flex: 0 0 auto; }
-.${UiClass.ribbonSearch} .${UiClass.search} { width: clamp(160px, 22vw, 260px); }
-/* Word's collapse caret, pinned to the ribbon's trailing edge: it toggles the controls band away to
-   maximize the editor/preview, while the tab strip stays visible. */
-.${UiClass.ribbonToggle} {
-  flex: 0 0 auto;
-  margin-left: auto;
+.${UiClass.inspectorRail} .${UiClass.dockClip} { width: 0; }
+/* The collapse/expand handle: a pill straddling the dock's right edge, vertically centered (the
+   conventional, discoverable place). It sits above the panes so it's always clickable, and tracks the
+   dock edge as the clip animates. The editor's gutter is padded so this never overlaps a line number. */
+.${UiClass.dockHandle} {
+  position: absolute;
+  top: 50%;
+  right: -11px;
+  transform: translateY(-50%);
+  z-index: 6;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: none;
-  color: var(--ui-text-faint);
+  width: 26px;
+  height: 54px;
+  padding: 0;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-full);
+  background: var(--ui-surface);
+  color: var(--ui-text-muted);
+  box-shadow: var(--ui-shadow-pop);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.${UiClass.dockHandle}:hover {
+  background: var(--ui-accent);
+  color: var(--ui-accent-text);
+  border-color: var(--ui-accent);
+}
+/* Left rail: a vertical section list grouped under category bands. No horizontal scroll — a vertical
+   list scales to all 17 sections; only this list scrolls (the band headers ride along). */
+.${UiClass.rail} {
+  flex: 0 0 auto;
+  width: var(--ui-rail-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ui-surface);
+  border-right: 1px solid var(--ui-border);
+}
+.${UiClass.railHead} {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: ${s.sm};
+  padding: ${s.md};
+  border-bottom: 1px solid var(--ui-border);
+}
+.${UiClass.railHead} .${UiClass.search} { width: 100%; }
+.${UiClass.scopeChips} { display: flex; gap: ${s.xs}; }
+.${UiClass.scopeChip} {
+  flex: 1 1 auto;
+  min-height: 28px;
+  padding: ${s.xs} ${s.sm};
+  border: 1px solid var(--ui-border-strong);
   border-radius: var(--ui-radius-sm);
+  background: var(--ui-surface);
+  color: var(--ui-text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
 }
-.${UiClass.ribbonToggle}:hover { background: var(--ui-surface-hover); color: var(--ui-text); }
-/* Chevron points up when the band is expanded (collapse hint) and down when collapsed; same transition
-   recipe as the dropdown chevron. */
-.${UiClass.ribbonChevron} { transition: transform 0.15s ease; transform: rotate(180deg); }
-.${UiClass.ribbonChevron}.is-collapsed { transform: rotate(0deg); }
-/* The active section's controls tile as Word-style "groups": a wrapping flex band of compact inline
-   rows split into labelled columns, so a typical section reads cleanly in one or two rows. The band is
-   bounded by max-height (not a fixed height) so a section that fits stays short with no dead space,
-   while a control-heavy section caps and scrolls INTERNALLY — it can never bleed over the panes below.
-   overscroll-behavior:contain keeps a band scroll from chaining to the page. */
-.${UiClass.ribbonBand} {
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: ${s.md} ${s.lg};
-  padding: ${s.md} ${s.lg};
-  max-height: clamp(120px, 22vh, 200px);
+.${UiClass.scopeChip}:hover { background: var(--ui-surface-hover); color: var(--ui-text); }
+.${UiClass.scopeChipActive} { background: var(--ui-accent); border-color: var(--ui-accent); color: var(--ui-accent-text); }
+.${UiClass.railList} {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  overflow-x: hidden;
   overscroll-behavior: contain;
+  padding: ${s.sm};
 }
-/* In search mode the band stacks per-section groups full width; each group's rows wrap inside it. */
-.${UiClass.ribbonGroup} { flex: 1 1 100%; display: grid; gap: ${s.sm}; }
-.${UiClass.ribbonGroupLabel} {
-  margin: 0;
-  font-size: 11px;
+.${UiClass.railBand} { display: flex; flex-direction: column; }
+.${UiClass.railBand} + .${UiClass.railBand} { margin-top: ${s.sm}; }
+.${UiClass.railBandLabel} {
+  margin: 0 0 2px;
+  padding: 0 ${s.sm};
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ui-text-faint);
 }
-/* Search results tile compact rows into responsive columns so a long match list reads densely; the rows
-   themselves carry the compact skin (same as the active tab) for a consistent ribbon feel. */
-.${UiClass.ribbonGroupBody} {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 2px ${s.lg};
+.${UiClass.railTab} {
+  display: flex;
+  align-items: center;
+  gap: ${s.sm};
+  width: 100%;
+  padding: 7px ${s.sm};
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  color: var(--ui-text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
 }
-/* The active tab's controls split into Word-style "group" columns by control-id prefix, each a tight
-   stack of compact rows with a faint divider; sections that don't sub-divide collapse to one column. */
-.${UiClass.ctlGroup} {
-  flex: 0 1 auto;
+.${UiClass.railTab}:hover { background: var(--ui-surface-hover); color: var(--ui-text); }
+.${UiClass.railTabActive} {
+  background: var(--ui-surface-hover);
+  color: var(--ui-accent);
+  border-left-color: var(--ui-accent);
+  font-weight: 600;
+}
+.${UiClass.railTabText} { flex: 1 1 auto; }
+.${UiClass.modifiedDot} { flex: 0 0 auto; width: 6px; height: 6px; border-radius: var(--ui-radius-full); background: var(--ui-accent); }
+/* The inspector: the SINGLE scroll surface in the chrome (no tab carousel, no nested band). A section
+   that fits stays short; a tall one scrolls only HERE. overscroll-behavior:contain stops scroll chaining. */
+.${UiClass.inspector} {
+  flex: 0 0 auto;
+  width: var(--ui-inspector-w);
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding-right: ${s.md};
-  border-right: 1px solid var(--ui-border);
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--ui-surface);
 }
-.${UiClass.ctlGroup}:last-child { border-right: none; padding-right: 0; }
-.${UiClass.ctlGroupLabel} {
-  margin: 0 0 2px;
-  font-size: 10px;
+.${UiClass.inspectorHead} {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${s.md};
+  padding: ${s.sm} ${s.lg};
+  background: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-border);
+}
+.${UiClass.inspectorTitle} { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; }
+.${UiClass.inspectorBody} { display: flex; flex-direction: column; gap: ${s.lg}; padding: ${s.md} ${s.lg}; }
+/* A facet/prefix sub-group: a localized header (never a raw id-prefix) over a stack of roomy rows. */
+.${UiClass.facetGroup} { display: flex; flex-direction: column; gap: ${s.sm}; }
+.${UiClass.facetLabel} {
+  margin: 0;
+  font-size: 10.5px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ui-text-faint);
 }
-.${UiClass.ctlGroupBody} { display: flex; flex-direction: column; gap: 2px; }
+.${UiClass.facetBody} { display: flex; flex-direction: column; gap: ${s.sm}; }
+/* A heading level rendered as a disclosure so the 54-control section stays short. */
+.${UiClass.levelGroup} { border-top: 1px solid var(--ui-border); padding-top: ${s.sm}; }
+.${UiClass.levelGroup}:first-child { border-top: none; padding-top: 0; }
+.${UiClass.levelToggle} {
+  display: flex;
+  align-items: center;
+  gap: ${s.xs};
+  width: 100%;
+  padding: ${s.xs} 0;
+  border: none;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.${UiClass.levelChevron} { transition: transform 0.15s ease; transform: rotate(-90deg); color: var(--ui-text-faint); }
+.${UiClass.levelChevron}.is-open { transform: rotate(0deg); }
+.${UiClass.levelGroup} .${UiClass.facetBody} { padding: ${s.xs} 0; }
+/* Syntax-color palette: a grid of named swatch cells instead of a tall stack of color rows. */
+.${UiClass.swatchGrid} { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: ${s.md}; }
+.${UiClass.swatchCell} { display: flex; flex-direction: column; gap: ${s.xs}; }
+.${UiClass.swatchCellLabel} { font-size: 12px; color: var(--ui-text-muted); font-weight: 500; }
 .${UiClass.grid} {
   flex: 1 1 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  min-width: 0;
   min-height: 0;
   background: var(--ui-border);
   gap: 1px;
@@ -440,7 +535,9 @@ export const CHROME_CSS = `
 .${UiClass.editorHost} { height: 100%; }
 .${UiClass.editorHost} .cm-editor { height: 100%; font-family: var(--ui-font-mono); font-size: 13.5px; }
 .${UiClass.editorHost} .cm-editor.cm-focused { outline: none; }
-.${UiClass.editorHost} .cm-scroller { padding: ${s.sm} 0; }
+/* Left padding clears the dock's edge handle (which straddles the editor's left edge) so it never sits
+   over a line number; the gutter is sticky-left inside the scroller, so it shifts with this padding. */
+.${UiClass.editorHost} .cm-scroller { padding: ${s.sm} 0 ${s.sm} 18px; }
 .${UiClass.panePreview} .${UiClass.paneBody} { padding: 0; }
 .${UiClass.previewFrame} {
   width: 100%;
@@ -521,12 +618,12 @@ export const CHROME_CSS = `
 }
 .${UiClass.selectChevron} { color: var(--ui-text-faint); transition: transform 0.15s ease; flex: 0 0 auto; }
 .${UiClass.selectChevron}.is-open { transform: rotate(180deg); }
-/* Popover surface; same elevation recipe as .ui-swatch-pop, plus a content-driven scroll cap and a
-   min-width so the menu is never narrower than the trigger that opened it. */
+/* Popover surface; same elevation recipe as .ui-swatch-pop. position:fixed (the component sets top/left/
+   width from the trigger rect) so the inspector's overflow:auto can't clip it; the content-driven height
+   is capped so a long list scrolls inside the menu. */
 .${UiClass.selectMenu} {
-  position: absolute;
+  position: fixed;
   z-index: 20;
-  min-width: 100%;
   max-height: ${MENU_MAX_HEIGHT_PX}px;
   overflow-y: auto;
   padding: ${s.xs};
@@ -561,8 +658,10 @@ export const CHROME_CSS = `
   padding: 0;
   flex: 0 0 auto;
 }
+/* position:fixed (the component sets top/left from the swatch rect) so the inspector's overflow:auto
+   can't clip the picker the way an absolutely-positioned child would. */
 .${UiClass.swatchPop} {
-  position: absolute;
+  position: fixed;
   z-index: 20;
   padding: ${s.sm};
   background: var(--ui-surface);
@@ -764,8 +863,13 @@ export const CHROME_CSS = `
   .${UiClass.brandMark} { border-color: CanvasText; }
   /* High Contrast flattens the accent fill, so cue the selected segment with the system Highlight pair. */
   .${UiClass.segmentActive} { background: Highlight; color: HighlightText; }
-  /* Same reasoning for the active ribbon tab, whose accent underline also flattens. */
-  .${UiClass.tabActive} { border-bottom-color: Highlight; color: Highlight; }
+  /* Same reasoning for the active rail tab and the scope chips, whose accent fill/border flatten. */
+  .${UiClass.railTabActive} { border-left-color: Highlight; color: Highlight; }
+  .${UiClass.scopeChipActive} { background: Highlight; color: HighlightText; }
+  /* The modified dot's accent fill flattens; keep it visible with a system color. */
+  .${UiClass.modifiedDot} { background: Highlight; }
+  /* The swatch cell relies on the swatch's own fill; keep its edge with a system color in High Contrast. */
+  .${UiClass.swatch} { border-color: CanvasText; }
   /* Token backgrounds flatten in High Contrast, so redraw the menu edge and cue the option states with
      system colors (same approach as .ui-segment-active above). */
   .${UiClass.selectMenu} { border: 1px solid CanvasText; }
@@ -775,33 +879,33 @@ export const CHROME_CSS = `
   .${UiClass.tooltip} { border: 1px solid CanvasText; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .${UiClass.tablist} { scroll-behavior: auto; }
+  .${UiClass.railList} { scroll-behavior: auto; }
   .${UiClass.selectChevron} { transition: none; }
   .${UiClass.toast} { transition: none; }
-  .${UiClass.ribbonChevron} { transition: none; }
+  .${UiClass.levelChevron} { transition: none; }
+  .${UiClass.dockClip} { transition: none; }
+  .${UiClass.dockHandle} { transition: none; }
   .${UiClass.tooltip} { transition: none; }
 }
-/* On narrow viewports the 50/50 editor|preview split stacks vertically, the ribbon band grows to keep
-   wrapped controls usable, and the toolbar wraps with the brand on its own line. The tab strip itself
-   needs no breakpoint — it scrolls horizontally at every width and the active tab is kept in view. */
+/* On a narrow viewport the controls dock drops below the toolbar as a capped-height band (rail still
+   left of the inspector, the inspector still the only control scroll), and the editor|preview split
+   stacks vertically beneath it. The toolbar wraps with the brand on its own line. */
+@media (max-width: 860px) {
+  .${UiClass.workspace} { flex-direction: column; }
+  .${UiClass.inspectorDock} { flex: 0 0 auto; width: 100%; max-height: 46vh; }
+  .${UiClass.dockClip} { width: 100%; }
+  .${UiClass.inspectorRail} .${UiClass.dockClip} { width: 0; }
+  .${UiClass.rail} { width: 168px; }
+  .${UiClass.inspector} { flex: 1 1 auto; width: auto; }
+}
 @media (max-width: 720px) {
   .${UiClass.grid} {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(220px, 1fr) minmax(220px, 1.4fr);
+    grid-template-rows: minmax(200px, 1fr) minmax(200px, 1.2fr);
   }
   .${UiClass.paneEditor} { grid-row: 1; }
   .${UiClass.panePreview} { grid-row: 2; }
-  .${UiClass.ribbonBand} { max-height: clamp(140px, 28vh, 220px); }
   .${UiClass.toolbar} { flex-wrap: wrap; gap: ${s.sm} ${s.md}; }
   .${UiClass.brand} { margin-right: 0; flex: 1 0 100%; }
-}
-@media (max-width: 560px) {
-  .${UiClass.ribbonTabs} { flex-wrap: wrap; }
-  .${UiClass.ribbonSearch} { order: -1; flex: 1 0 100%; }
-  .${UiClass.ribbonSearch} .${UiClass.search} { width: 100%; }
-}
-/* On a short laptop the band must never grow to eat the editor/preview split, so cap it harder. */
-@media (max-height: 640px) {
-  .${UiClass.ribbonBand} { max-height: 30vh; }
 }
 `;

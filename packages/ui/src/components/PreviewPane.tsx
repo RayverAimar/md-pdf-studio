@@ -32,7 +32,7 @@ export function PreviewPane() {
   const markdown = useDocumentStore((state) => state.markdown);
   const theme = useThemeStore((state) => state.theme);
   const locale = useLocaleStore((state) => state.locale);
-  const focusSection = useUiStore((state) => state.focusSection);
+  const selectElement = useUiStore((state) => state.selectElement);
   const { html, css, headings } = usePreviewPipeline(markdown, theme);
 
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -93,7 +93,8 @@ export function PreviewPane() {
     }
   }, [ready, theme, locale]);
 
-  // Clicking an element jumps the controls panel to the section that styles it.
+  // Clicking an element jumps the rail to the section that styles it and records the element so the
+  // inspector can announce it (and, when Follow selection is on, move focus to its first control).
   useEffect(() => {
     const doc = frameRef.current?.contentDocument;
     if (!ready || doc === null || doc === undefined) return;
@@ -101,12 +102,13 @@ export function PreviewPane() {
       const target = event.target as Element | null;
       const owner = target?.closest(`[${ELEMENT_ATTRIBUTE}]`) ?? null;
       const key = owner?.getAttribute(ELEMENT_ATTRIBUTE) ?? null;
-      const section = key !== null && isElementKey(key) ? ELEMENT_TO_SECTION[key] : undefined;
-      if (section !== undefined) focusSection(section);
+      if (key === null || !isElementKey(key)) return;
+      const section = ELEMENT_TO_SECTION[key];
+      if (section !== undefined) selectElement(section, key);
     };
     doc.addEventListener("click", onClick);
     return () => doc.removeEventListener("click", onClick);
-  }, [ready, focusSection]);
+  }, [ready, selectElement]);
 
   return (
     <section

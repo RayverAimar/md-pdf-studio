@@ -171,6 +171,18 @@ export const Section = {
 } as const;
 export type SectionId = (typeof Section)[keyof typeof Section];
 
+// The four bands the controls rail groups its sections under. Purely presentational chrome — a coarse
+// index over the closed section set, the rail's analogue of SECTION_ORDER — so a new control needs no
+// change and a new section needs only one entry in the UI's section→category map. The visible band name
+// is resolved per locale in i18n (categoryLabel), never stored here.
+export const RailCategory = {
+  pageDocument: "page-document",
+  text: "text",
+  blocks: "blocks",
+  codeTables: "code-tables",
+} as const;
+export type RailCategoryId = (typeof RailCategory)[keyof typeof RailCategory];
+
 // Central color palette. Schema defaults and presets reference these names rather than raw hex so the
 // whole product shares one set of colors the UI can also consume.
 export const Palette = {

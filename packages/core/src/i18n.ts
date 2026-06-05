@@ -1,4 +1,4 @@
-import { Section, type SectionId } from "./constants";
+import { RailCategory, type RailCategoryId, Section, type SectionId } from "./constants";
 import { PresetId } from "./presets";
 import { HEADING_CONTROL_SUFFIXES, type HeadingControlSuffix } from "./schema";
 
@@ -29,21 +29,18 @@ export function resolveLocale(value: string | null | undefined): Locale {
 // current locale and passes it in.
 const Messages = {
   appName: { en: "md-pdf-studio", es: "md-pdf-studio" },
-  logoLabel: { en: "md-pdf-studio logo", es: "logo de md-pdf-studio" },
   exportPdf: { en: "Export PDF", es: "Exportar PDF" },
   generating: { en: "Generating…", es: "Generando…" },
   language: { en: "Language", es: "Idioma" },
   increment: { en: "Increase", es: "Aumentar" },
   decrement: { en: "Decrease", es: "Disminuir" },
   resetAll: { en: "Reset all", es: "Restablecer todo" },
-  search: { en: "Search", es: "Buscar" },
   preset: { en: "Preset", es: "Preajuste" },
   controls: { en: "Controls", es: "Controles" },
   editor: { en: "Editor", es: "Editor" },
   preview: { en: "Preview", es: "Vista previa" },
   exportFailed: { en: "Could not export the PDF", es: "No se pudo exportar el PDF" },
   noResults: { en: "No matching controls", es: "Sin controles que coincidan" },
-  document: { en: "Document", es: "Documento" },
   importMarkdown: { en: "Import Markdown", es: "Importar Markdown" },
   newDocument: { en: "New document", es: "Nuevo documento" },
   confirmNewDocument: {
@@ -78,9 +75,14 @@ const Messages = {
   footerPage: { en: "Page", es: "Página" },
   switchToDark: { en: "Switch to dark theme", es: "Cambiar a tema oscuro" },
   switchToLight: { en: "Switch to light theme", es: "Cambiar a tema claro" },
-  collapseRibbon: { en: "Collapse ribbon", es: "Contraer cinta" },
-  expandRibbon: { en: "Expand ribbon", es: "Expandir cinta" },
   rangeTo: { en: "to", es: "a" },
+  searchControls: { en: "Search controls", es: "Buscar controles" },
+  all: { en: "All", es: "Todos" },
+  modified: { en: "Modified", es: "Modificados" },
+  resetSection: { en: "Reset section", es: "Restablecer sección" },
+  selected: { en: "Selected", es: "Seleccionado" },
+  hideControls: { en: "Hide controls", es: "Ocultar controles" },
+  showControls: { en: "Show controls", es: "Mostrar controles" },
 } satisfies Record<string, Localized>;
 
 export type MessageKey = keyof typeof Messages;
@@ -111,6 +113,43 @@ const SECTION_LABELS: Record<SectionId, Localized> = {
 
 export function sectionLabel(sectionId: SectionId, locale: Locale): string {
   return SECTION_LABELS[sectionId][locale];
+}
+
+// The rail's four category bands. Keyed by RailCategoryId so a new band forces a translation here.
+const CATEGORY_LABELS: Record<RailCategoryId, Localized> = {
+  [RailCategory.pageDocument]: { en: "Page & document", es: "Página y documento" },
+  [RailCategory.text]: { en: "Text", es: "Texto" },
+  [RailCategory.blocks]: { en: "Blocks", es: "Bloques" },
+  [RailCategory.codeTables]: { en: "Code & tables", es: "Código y tablas" },
+};
+
+export function categoryLabel(categoryId: RailCategoryId, locale: Locale): string {
+  return CATEGORY_LABELS[categoryId][locale];
+}
+
+// Labels for the inspector's sub-group headers — both the derived property facets (typography, color,
+// …) and the control-id prefixes of multi-prefix sections (strong→Bold, em→Italic, …). Keeping these
+// here means the raw id-prefix never reaches the DOM. An unknown key (the heading levels h1…h6, which
+// read the same in every locale) falls back to its upper-cased form, so "h1" renders as "H1".
+const GROUP_LABELS: Record<string, Localized> = {
+  typography: { en: "Typography", es: "Tipografía" },
+  color: { en: "Color", es: "Color" },
+  spacing: { en: "Spacing", es: "Espaciado" },
+  border: { en: "Border", es: "Borde" },
+  behavior: { en: "Behavior", es: "Comportamiento" },
+  strong: { en: "Bold", es: "Negrita" },
+  em: { en: "Italic", es: "Cursiva" },
+  list: { en: "List", es: "Lista" },
+  taskList: { en: "Task list", es: "Lista de tareas" },
+  image: { en: "Image", es: "Imagen" },
+  caption: { en: "Caption", es: "Leyenda" },
+  header: { en: "Header", es: "Encabezado" },
+  footer: { en: "Footer", es: "Pie" },
+  headerFooter: { en: "Shared", es: "Compartido" },
+};
+
+export function groupLabel(key: string, locale: Locale): string {
+  return GROUP_LABELS[key]?.[locale] ?? key.toUpperCase();
 }
 
 const PRESET_LABELS: Record<PresetId, Localized> = {
@@ -240,6 +279,7 @@ const CONTROL_LABELS_ES: Record<string, string> = {
   "toc.enabled": "Mostrar tabla de contenido",
   "toc.depth": "Profundidad",
   "toc.title": "Título",
+  "toc.pageNumbers": "Mostrar números de página",
   "toc.leaderDots": "Puntos guía",
   "toc.fontSize": "Tamaño de fuente",
   "toc.indentPerLevel": "Sangría por nivel",
@@ -249,8 +289,10 @@ const CONTROL_LABELS_ES: Record<string, string> = {
   "pagination.breakBeforeH1": "Salto de página antes de H1",
   "header.show": "Mostrar encabezado",
   "header.content": "Contenido de encabezado",
+  "header.align": "Alineación de encabezado",
   "footer.show": "Mostrar pie",
   "footer.content": "Contenido de pie",
+  "footer.align": "Alineación de pie",
   "headerFooter.fontSize": "Tamaño de fuente",
   "headerFooter.color": "Color de texto",
 };
@@ -333,6 +375,16 @@ const OPTION_LABELS: Record<string, Record<string, Localized>> = {
     title: { en: "Title", es: "Título" },
     date: { en: "Date", es: "Fecha" },
     "title-date": { en: "Title & date", es: "Título y fecha" },
+  },
+  "header.align": {
+    left: { en: "Left", es: "Izquierda" },
+    center: { en: "Center", es: "Centro" },
+    right: { en: "Right", es: "Derecha" },
+  },
+  "footer.align": {
+    left: { en: "Left", es: "Izquierda" },
+    center: { en: "Center", es: "Centro" },
+    right: { en: "Right", es: "Derecha" },
   },
   "footer.content": {
     none: { en: "None", es: "Ninguno" },

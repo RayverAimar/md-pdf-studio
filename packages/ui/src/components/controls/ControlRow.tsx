@@ -13,9 +13,12 @@ interface ControlRowProps {
   locale: Locale;
   value: ThemeValue;
   onChange: (id: string, value: ThemeValue) => void;
-  // Presentation-only: switches the row to the tight Word-ribbon inline layout. Never selects a widget
-  // or alters a value, so the control still renders purely from its schema def.
+  // Presentation-only: switches the row to the tight inline layout. Never selects a widget or alters a
+  // value, so the control still renders purely from its schema def.
   compact?: boolean;
+  // Drops the row's own <label> when an ancestor already labels the field (the swatch grid cell), so the
+  // field is never doubly-labelled. The field keeps inputId so the external <label htmlFor> still targets it.
+  hideLabel?: boolean;
 }
 
 // Memoized so editing one control re-renders only its row, not the whole panel of controls.
@@ -26,6 +29,7 @@ export const ControlRow = memo(function ControlRow({
   value,
   onChange,
   compact = false,
+  hideLabel = false,
 }: ControlRowProps) {
   const label = controlLabel(id, control.label, locale);
   const inputId = `ctl-${id}`;
@@ -44,9 +48,11 @@ export const ControlRow = memo(function ControlRow({
           {...trigger}
         >
           {/* title is a native belt-and-suspenders fallback for the compact label, which can ellipsis. */}
-          <label className={UiClass.rowLabel} htmlFor={inputId} title={label}>
-            {label}
-          </label>
+          {hideLabel ? null : (
+            <label className={UiClass.rowLabel} htmlFor={inputId} title={label}>
+              {label}
+            </label>
+          )}
           <div
             className={
               isNumeric ? `${UiClass.rowField} ${UiClass.rowFieldNumeric}` : UiClass.rowField

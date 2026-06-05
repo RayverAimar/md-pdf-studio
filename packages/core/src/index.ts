@@ -8,17 +8,21 @@ export {
   FontStack,
   isElementKey,
   Palette,
+  RailCategory,
+  type RailCategoryId,
   Section,
   type SectionId,
   Selector,
   ShikiVar,
 } from "./constants";
 export { FONT_FACE_CSS } from "./fonts";
-export { composeDocumentCss, generateCss, HEX_RE, isHexColor } from "./generateCss";
+export { composeDocumentCss, generateCss, isHexColor } from "./generateCss";
 export { highlightCode } from "./highlight";
 export {
+  categoryLabel,
   controlLabel,
   DEFAULT_LOCALE,
+  groupLabel,
   hasSpanishControlLabel,
   isLocale,
   Locale,

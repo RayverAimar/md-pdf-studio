@@ -5,7 +5,6 @@ import { persistedStorage, StorageKey } from "./persistence";
 interface RibbonState {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
-  toggle: () => void;
 }
 
 // Word-style ribbon collapse preference. Purely chrome: collapsing only removes the controls band from
@@ -17,7 +16,6 @@ export const useRibbonStore = create<RibbonState>()(
     (set) => ({
       collapsed: false,
       setCollapsed: (collapsed) => set({ collapsed }),
-      toggle: () => set((s) => ({ collapsed: !s.collapsed })),
     }),
     { name: StorageKey.ribbon, storage: persistedStorage, skipHydration: true },
   ),
