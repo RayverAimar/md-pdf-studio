@@ -32,7 +32,7 @@ const lightColors = {
 
 type ChromeColors = Record<keyof typeof lightColors, string>;
 
-// Tuned for WCAG AA on dark surfaces (ratios documented in the issue plan); accentText flips to
+// Tuned for WCAG AA on dark surfaces; accentText flips to
 // near-black because the dark accent fill is a light blue.
 const darkColors: ChromeColors = {
   app: "#06080f",

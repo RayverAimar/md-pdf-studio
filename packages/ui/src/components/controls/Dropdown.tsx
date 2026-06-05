@@ -234,7 +234,7 @@ export function Dropdown({ id, label, options, value, onChange, describedBy }: D
         ref={triggerRef}
         id={id}
         type="button"
-        // A native <select> can't be themed for dark mode (issue #21); role=combobox layers the APG
+        // A native <select> can't be themed for dark mode; role=combobox layers the APG
         // listbox pattern onto a real button, keeping its focus-ring and forced-colors rendering.
         role="combobox"
         className={`${UiClass.select} ${UiClass.selectTrigger}`}
