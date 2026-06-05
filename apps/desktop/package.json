@@ -8,6 +8,7 @@
     "name": "Rayver Muñoz Curi",
     "email": "ragi@burhum.com"
   },
+  "homepage": "https://github.com/RayverAimar/md-pdf-studio",
   "main": "dist/main.mjs",
   "scripts": {
     "build": "node esbuild.mjs",
@@ -52,6 +53,7 @@
     "linux": {
       "icon": "build/icon.png",
       "category": "Office",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
       "target": [
         "AppImage",
         "deb"
