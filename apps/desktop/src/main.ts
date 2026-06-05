@@ -1,9 +1,13 @@
 import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { type DesktopExportResult, pdfFileName, type RenderInput } from "@md-pdf-studio/core";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
+// electron-updater is CommonJS; default-import then destructure so the interop is unambiguous under ESM.
+import electronUpdater from "electron-updater";
 import { RENDER_CHANNEL } from "./ipc";
 import { ElectronRenderPort } from "./renderPort";
 
+const { autoUpdater } = electronUpdater;
 const { MDPDF_WEB_URL } = process.env;
 
 // The ad-hoc-signed dev binary makes macOS prompt for the login-keychain password on every launch
@@ -42,11 +46,19 @@ function createWindow(): void {
       sandbox: false,
     },
   });
-  void win.loadURL(MDPDF_WEB_URL ?? "http://localhost:3000");
+  // A packaged build serves the UI from its own bundled renderer (file://); dev loads the Next dev
+  // server for HMR. MDPDF_WEB_URL overrides both, e.g. to point a build at a hosted web app.
+  if (MDPDF_WEB_URL !== undefined) void win.loadURL(MDPDF_WEB_URL);
+  else if (app.isPackaged) void win.loadFile(join(import.meta.dirname, "renderer", "index.html"));
+  else void win.loadURL("http://localhost:3000");
 }
 
 void app.whenReady().then(() => {
   createWindow();
+  // Only a packaged build can self-update; it checks the GitHub release feed and notifies the user once
+  // a newer version is downloaded, ready to install on the next launch. Failures (offline, no release
+  // yet) are non-fatal.
+  if (app.isPackaged) void autoUpdater.checkForUpdatesAndNotify().catch(() => undefined);
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

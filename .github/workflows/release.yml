@@ -20,20 +20,13 @@ jobs:
           cache: pnpm
       # onlyBuiltDependencies:["electron"] lets electron's postinstall run under pnpm 9
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @md-pdf-studio/web build
+      # The desktop bundles its own renderer, so it no longer needs the web app built first.
       - run: pnpm --filter @md-pdf-studio/desktop build
-      - name: Package desktop installers
-        run: pnpm --filter @md-pdf-studio/desktop exec electron-builder --publish never
+      # `--publish always` uploads the installers AND the electron-updater feed (latest*.yml) to the
+      # tag's GitHub release; each OS contributes its own artifacts to the same release.
+      - name: Build & publish installers
+        run: pnpm --filter @md-pdf-studio/desktop exec electron-builder --publish always
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # no Apple cert in CI; produce an unsigned build instead of failing
           CSC_IDENTITY_AUTO_DISCOVERY: false
-      - uses: softprops/action-gh-release@v2
-        with:
-          # each OS uploads only the artifacts it produced; unmatched globs are skipped
-          files: |
-            apps/desktop/release/*.dmg
-            apps/desktop/release/*.zip
-            apps/desktop/release/*.exe
-            apps/desktop/release/*.AppImage
-            apps/desktop/release/*.deb
-          fail_on_unmatched_files: false

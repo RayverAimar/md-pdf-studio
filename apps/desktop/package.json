@@ -13,6 +13,7 @@
     "build": "node esbuild.mjs",
     "dev": "node esbuild.mjs && electron .",
     "start": "electron .",
+    "dist": "node esbuild.mjs && electron-builder",
     "typecheck": "tsc",
     "test:integration": "node esbuild.mjs integration/renderPort.integration.ts && electron dist/renderPort.integration.mjs"
   },
@@ -27,6 +28,11 @@
       "dist/**/*",
       "build/icon.*"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "RayverAimar",
+      "repo": "md-pdf-studio"
+    },
     "npmRebuild": false,
     "nodeGypRebuild": false,
     "mac": {
@@ -56,12 +62,15 @@
     "@md-pdf-studio/core": "workspace:*",
     "@md-pdf-studio/render": "workspace:*",
     "@md-pdf-studio/ui": "workspace:*",
-    "pdfjs-dist": "6.0.227"
+    "pdfjs-dist": "6.0.227",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
   },
   "devDependencies": {
     "@types/node": "25.9.1",
     "electron": "42.3.0",
     "electron-builder": "26.8.1",
+    "electron-updater": "6.8.3",
     "esbuild": "0.28.0",
     "typescript": "6.0.3"
   }

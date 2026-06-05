@@ -1,14 +1,16 @@
+import { cp } from "node:fs/promises";
 import { build } from "esbuild";
 
 // Bundles the Electron main-process entry points (and the integration runner) into self-contained ESM,
 // inlining the workspace packages and their deps. Only `electron` stays external — the runtime provides
-// it. Pass entry points as CLI args; defaults to the app's main + preload.
+// it. Pass entry points as CLI args; defaults to the app's main + preload (plus the renderer bundle).
 const DEFAULT_ENTRIES = ["src/main.ts", "src/preload.ts"];
 
 const entryPoints = process.argv.slice(2);
+const isAppBuild = entryPoints.length === 0;
 
 await build({
-  entryPoints: entryPoints.length > 0 ? entryPoints : DEFAULT_ENTRIES,
+  entryPoints: isAppBuild ? DEFAULT_ENTRIES : entryPoints,
   bundle: true,
   platform: "node",
   format: "esm",
@@ -35,3 +37,24 @@ await build({
     ].join(" "),
   },
 });
+
+// The renderer: a browser bundle of the shared UI (the same <Studio/> the web app mounts) plus its
+// page shell, loaded from file:// by the packaged window so the app runs with no dev server. The
+// preview worker bundles alongside it; if file:// blocks the module worker, the pipeline falls back to
+// the main thread, so the preview stays correct.
+if (isAppBuild) {
+  await build({
+    entryPoints: ["src/renderer/renderer.tsx"],
+    bundle: true,
+    platform: "browser",
+    format: "esm",
+    target: ["chrome120"],
+    outdir: "dist/renderer",
+    outExtension: { ".js": ".mjs" },
+    sourcemap: true,
+    jsx: "automatic",
+    loader: { ".ttf": "dataurl", ".woff": "dataurl", ".woff2": "dataurl" },
+    logLevel: "info",
+  });
+  await cp("src/renderer/index.html", "dist/renderer/index.html");
+}
