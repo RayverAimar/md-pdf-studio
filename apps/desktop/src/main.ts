@@ -4,7 +4,13 @@ import { type DesktopExportResult, pdfFileName, type RenderInput } from "@md-pdf
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 // electron-updater is CommonJS; default-import then destructure so the interop is unambiguous under ESM.
 import electronUpdater from "electron-updater";
-import { RENDER_CHANNEL } from "./ipc";
+import {
+  RENDER_CHANNEL,
+  UPDATE_DOWNLOAD_CHANNEL,
+  UPDATE_EVENT_CHANNEL,
+  UPDATE_INSTALL_CHANNEL,
+  type UpdateEvent,
+} from "./ipc";
 import { ElectronRenderPort } from "./renderPort";
 
 const { autoUpdater } = electronUpdater;
@@ -33,7 +39,7 @@ ipcMain.handle(RENDER_CHANNEL, async (_event, input: RenderInput): Promise<Deskt
   return { ok: true, canceled: false, path: filePath };
 });
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1440,
     height: 900,
@@ -51,14 +57,44 @@ function createWindow(): void {
   if (MDPDF_WEB_URL !== undefined) void win.loadURL(MDPDF_WEB_URL);
   else if (app.isPackaged) void win.loadFile(join(import.meta.dirname, "renderer", "index.html"));
   else void win.loadURL("http://localhost:3000");
+  return win;
+}
+
+// Drive auto-update through the renderer's in-app UpdateChecker: forward each electron-updater event to
+// the window, and download / install on the user's request (autoDownload off so the dialog can show
+// progress and let the user choose when to restart). Packaged-only; failures are non-fatal.
+function setupAutoUpdate(win: BrowserWindow): void {
+  autoUpdater.autoDownload = false;
+  const send = (event: UpdateEvent): void => {
+    if (!win.isDestroyed()) win.webContents.send(UPDATE_EVENT_CHANNEL, event);
+  };
+  autoUpdater.on("update-available", (info) =>
+    send({
+      kind: "available",
+      version: info.version,
+      notes: typeof info.releaseNotes === "string" ? info.releaseNotes : "",
+    }),
+  );
+  autoUpdater.on("download-progress", (p) =>
+    send({
+      kind: "progress",
+      percent: Math.round(p.percent),
+      transferredMb: p.transferred / 1_048_576,
+      totalMb: p.total / 1_048_576,
+    }),
+  );
+  autoUpdater.on("update-downloaded", (info) =>
+    send({ kind: "downloaded", version: info.version }),
+  );
+  autoUpdater.on("error", (err) => send({ kind: "error", message: err.message }));
+  ipcMain.handle(UPDATE_DOWNLOAD_CHANNEL, () => autoUpdater.downloadUpdate());
+  ipcMain.on(UPDATE_INSTALL_CHANNEL, () => autoUpdater.quitAndInstall());
+  void autoUpdater.checkForUpdates().catch(() => undefined);
 }
 
 void app.whenReady().then(() => {
-  createWindow();
-  // Only a packaged build can self-update; it checks the GitHub release feed and notifies the user once
-  // a newer version is downloaded, ready to install on the next launch. Failures (offline, no release
-  // yet) are non-fatal.
-  if (app.isPackaged) void autoUpdater.checkForUpdatesAndNotify().catch(() => undefined);
+  const win = createWindow();
+  if (app.isPackaged) setupAutoUpdate(win);
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

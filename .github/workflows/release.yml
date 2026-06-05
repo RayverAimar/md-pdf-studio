@@ -23,9 +23,13 @@ jobs:
       # The desktop bundles its own renderer, so it no longer needs the web app built first.
       - run: pnpm --filter @md-pdf-studio/desktop build
       # `--publish always` uploads the installers AND the electron-updater feed (latest*.yml) to the
-      # tag's GitHub release; each OS contributes its own artifacts to the same release.
+      # tag's GitHub release; each OS contributes its own artifacts to the same release. The built
+      # version is taken from the tag (v1.2.3 -> 1.2.3) via extraMetadata so every release advertises a
+      # real, increasing version — otherwise the hardcoded 0.0.0 makes the updater never see a newer one.
+      # bash shell so the ${VAR#v} strip works on the Windows runner too.
       - name: Build & publish installers
-        run: pnpm --filter @md-pdf-studio/desktop exec electron-builder --publish always
+        shell: bash
+        run: pnpm --filter @md-pdf-studio/desktop exec electron-builder --publish always --config.extraMetadata.version="${GITHUB_REF_NAME#v}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # no Apple cert in CI; produce an unsigned build instead of failing
