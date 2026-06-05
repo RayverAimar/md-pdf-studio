@@ -1180,7 +1180,7 @@ const controls: Record<string, ControlDef> = {
       line: [
         {
           selector: Selector.footnotesSeparator,
-          decl: `border: 0; border-top: 1px solid ${cssVarRef(CssVar.tableBorder)}`,
+          decl: `border: 0; border-top: 1px solid ${tableBorderRef}`,
         },
       ],
       space: [{ selector: Selector.footnotesSeparator, decl: "border: 0; margin-block: 1em" }],
@@ -1241,6 +1241,15 @@ const controls: Record<string, ControlDef> = {
     enum: ["contents", "index", "none"],
     section: Section.toc,
     label: "Title",
+  },
+  "toc.pageNumbers": {
+    type: "boolean",
+    emitter: "boolean",
+    control: "toggle",
+    default: true,
+    css: { whenFalse: `${Selector.tocPageNumber}, ${Selector.tocLeader} { display: none; }` },
+    section: Section.toc,
+    label: "Show page numbers",
   },
   "toc.leaderDots": {
     type: "boolean",
@@ -1342,6 +1351,15 @@ const controls: Record<string, ControlDef> = {
     section: Section.headerFooter,
     label: "Header content",
   },
+  "header.align": {
+    type: "enum",
+    emitter: "meta",
+    control: "segmented",
+    default: "left",
+    enum: ["left", "center", "right"],
+    section: Section.headerFooter,
+    label: "Header align",
+  },
   "footer.show": {
     type: "boolean",
     emitter: "meta",
@@ -1358,6 +1376,15 @@ const controls: Record<string, ControlDef> = {
     enum: ["none", "page", "page-total", "title-page"],
     section: Section.headerFooter,
     label: "Footer content",
+  },
+  "footer.align": {
+    type: "enum",
+    emitter: "meta",
+    control: "segmented",
+    default: "center",
+    enum: ["left", "center", "right"],
+    section: Section.headerFooter,
+    label: "Footer align",
   },
   "headerFooter.fontSize": {
     type: "dimension",
